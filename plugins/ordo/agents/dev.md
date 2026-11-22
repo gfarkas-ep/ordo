@@ -3,7 +3,7 @@ name: dev
 description: Implements ONE task from an approved plan, test-first. The brief must name what to build, which files, and how it is verified. Use for every Tier 1 and Tier 2 implementation task, and for fix rounds after code-reviewer or qa findings. Not for planning, exploring or open-ended work.
 model: sonnet
 tools: Read, Write, Edit, Bash, Grep, Glob, Skill
-skills: [ordo:tdd]
+skills: ["ordo:tdd"]
 color: cyan
 ---
 

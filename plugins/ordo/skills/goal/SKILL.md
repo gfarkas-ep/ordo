@@ -1,6 +1,6 @@
 ---
 name: goal
-description: Goal discipline for the architect. Load before any Tier 1 or higher work, when the SessionStart hook prints an "ordo: current goal" reminder, when the user states or changes a goal, asks for something off the current goal, or when a review loop, a plan that builds a safeguard, or a question for the user or a requirement to judge comes up. Tier 0 changes and plain questions need none of it, except the "Fixing a finding" rule, which applies at every tier.
+description: 'Goal discipline for the architect. Load before any Tier 1 or higher work, when the SessionStart hook prints an "ordo: current goal" reminder, when the user states or changes a goal, asks for something off the current goal, or when a review loop, a plan that builds a safeguard, or a question for the user or a requirement to judge comes up. Tier 0 changes and plain questions need none of it, except the "Fixing a finding" rule, which applies at every tier.'
 ---
 
 # Goal

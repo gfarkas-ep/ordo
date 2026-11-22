@@ -1,6 +1,6 @@
 ---
 name: tdd
-description: Test-first method for any behaviour change: seams, red-green loop, what makes a test worth keeping. Use before writing or changing code that alters behaviour, when fixing a bug, or when judging whether a test can catch a regression.
+description: 'Test-first method for any behaviour change: seams, red-green loop, what makes a test worth keeping. Use before writing or changing code that alters behaviour, when fixing a bug, or when judging whether a test can catch a regression.'
 ---
 
 # Test-driven development

@@ -2,6 +2,7 @@
 
 Versions, newest first. 0.12.0 is a breaking change.
 
+- 0.14.1 fixes skill and agent frontmatter that strict YAML parsers rejected (GitHub showed an error on those files): the `goal`, `tdd` and `workflow` descriptions are now quoted, and `dev` and `qa` list `skills: ["ordo:tdd"]` with quotes. Claude Code behaviour is unchanged.
 - 0.14.0 makes tests and reviews earn their place: a test protects behaviour someone relies on and never pins one-off wording; Tier 0 names four cases done directly (an asset, a version raise, doc wording, a direct "change X to Y"); a spec decision that changes no behaviour gets a short BA revise (`old → new` lines, no full QA or po re-run); reviewers flag over-pins, which are removed in the same round once the main session agrees; Tier 1 acceptance criteria go into the commit message. New eval cases cover the Tier 0 path, the short revise and the over-pin finding.
 - 0.13.2 adds the plugin icon (`plugins/ordo/.claude-plugin/icon.png`, 1024 px): five role arcs around a dial, with the current goal at the centre.
 - 0.13.1 fixes `stall-check.sh` stopping under dash (the Linux `/bin/sh`) when the transcript is missing or unreadable: it now prints the note and carries on. CI also installs zsh, which the feedback test needs.

@@ -3,7 +3,7 @@ name: qa
 description: Verifies finished work without editing it. Audits whether the tests can actually catch a regression, runs the verification commands, and returns PASS or FAIL with evidence. Use before reporting a Tier 2 task done, and as the test-strategy seat in consult-panel.
 model: sonnet
 tools: Read, Grep, Glob, Bash, Skill
-skills: [ordo:tdd]
+skills: ["ordo:tdd"]
 color: yellow
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: workflow
-description: The architect workflow for the main session: tiers, which agent or skill to use, git rules. Load when the SessionStart hook prints "ordo: load the ordo:workflow skill", and before the first reply to any request that may change behaviour, code or live systems.
+description: 'The architect workflow for the main session: tiers, which agent or skill to use, git rules. Load when the SessionStart hook prints "ordo: load the ordo:workflow skill", and before the first reply to any request that may change behaviour, code or live systems.'
 ---
 
 # Workflow
