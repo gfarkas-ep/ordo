@@ -1,0 +1,42 @@
+name: CI
+
+# Free checks only: no secrets, no model calls.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq and rsync when missing
+        run: |
+          if ! command -v jq >/dev/null || ! command -v rsync >/dev/null; then
+            if command -v apt-get >/dev/null; then
+              sudo apt-get update && sudo apt-get install -y jq rsync
+            else
+              brew install jq rsync
+            fi
+          fi
+      - name: Run every test script
+        shell: bash
+        run: |
+          # BEGIN ci-test-step
+          status=0
+          for t in scripts/test-*.sh; do
+            echo "== $t"
+            rc=0; out=$(bash "$t" 2>&1) || rc=$?
+            if [ "$rc" -ne 0 ]; then
+              printf '%s\n' "$out"
+              echo "FAILED: $t (exit $rc)"
+              status=1
+            else
+              printf '%s\n' "$out" | tail -n 1
+            fi
+          done
+          exit "$status"
+          # END ci-test-step

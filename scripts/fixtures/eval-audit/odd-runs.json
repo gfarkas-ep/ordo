@@ -1,0 +1,4 @@
+{"cases":[
+{"arms":{"with":[{"passed":true,"error":null,"costUsd":0.10,"durationSeconds":10}]}},
+{"name":"truthy","arms":{"with":[{"passed":1,"error":null,"costUsd":0.05,"durationSeconds":4}]}}
+]}

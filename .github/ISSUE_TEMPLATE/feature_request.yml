@@ -1,0 +1,24 @@
+name: Feature request
+description: Suggest a change or addition to ordo
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What goes wrong or is missing today
+    validations:
+      required: true
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Proposed behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: philosophy
+    attributes:
+      label: Fit with the README philosophy
+      description: Which part of the README opening this fits (process sized by tier, bounded review rounds, one goal at a time, rules backed by evals) and why
+    validations:
+      required: true

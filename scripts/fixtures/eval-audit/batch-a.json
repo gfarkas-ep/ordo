@@ -1,0 +1,11 @@
+{"cases":[
+{"name":"all-pass","arms":{"with":[{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.10,"durationSeconds":10},{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.20,"durationSeconds":20},{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.30,"durationSeconds":30}]}},
+{"name":"all-fail","arms":{"with":[{"passed":false,"score":1,"error":null,"graders":[],"costUsd":0.50,"durationSeconds":40},{"passed":false,"score":1,"error":null,"graders":[],"costUsd":0.50,"durationSeconds":50},{"passed":false,"score":1,"error":null,"graders":[],"costUsd":0.50,"durationSeconds":60}]}},
+{"name":"flaky","arms":{"with":[{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.30,"durationSeconds":30},{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.30,"durationSeconds":30},{"passed":false,"score":1,"error":null,"graders":[],"costUsd":0.30,"durationSeconds":30}]}},
+{"name":"errored","arms":{"with":[{"passed":true,"score":1,"error":"timeout","graders":[],"costUsd":0.45,"durationSeconds":15}]}},
+{"name":"split","arms":{"with":[{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.10,"durationSeconds":10},{"passed":false,"score":1,"error":null,"graders":[],"costUsd":0.20,"durationSeconds":20}]}},
+{"name":"tie-a","arms":{"with":[{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.25,"durationSeconds":5}]}},
+{"name":"tie-b","arms":{"with":[{"passed":true,"score":1,"error":null,"graders":[],"costUsd":0.25,"durationSeconds":7}]}},
+{"name":"empty-arms","arms":{"with":[]}},
+{"name":"no-arms"}
+]}

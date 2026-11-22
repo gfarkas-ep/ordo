@@ -1,0 +1,5 @@
+.DS_Store
+plugins/ordo/evals/results/
+plugins/ordo/evals-noagent/results/
+__pycache__/
+.claude/worktrees/

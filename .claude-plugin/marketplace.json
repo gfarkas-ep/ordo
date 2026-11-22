@@ -1,0 +1,14 @@
+{
+  "name": "ordo-marketplace",
+  "description": "Working roles for Claude Code: architect workflow, business analyst, product owner, senior dev, senior QA, code reviewer, eval-plan, workflow, goal and retro skills, user-started feedback report, Bash guard hook, goal hook, opt-in usage log",
+  "owner": {
+    "name": "gfarkas-ep"
+  },
+  "plugins": [
+    {
+      "name": "ordo",
+      "source": "./plugins/ordo",
+      "description": "Senior dev, senior QA, code reviewer, business analyst, product owner and reader agents plus tdd, diagnose, refine, consult-panel, decision, grill, eval-plan, workflow, goal and retro skills, a user-started feedback report, a Bash guard hook, a goal hook and an opt-in local usage log"
+    }
+  ]
+}
