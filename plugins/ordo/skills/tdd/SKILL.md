@@ -13,6 +13,10 @@ Every behaviour change ships with a test written first. Before reporting work do
 
 Tests verify behaviour through public interfaces. The code behind them can change completely and the test still holds. A good test reads like a specification ("user can check out with a valid cart") and survives refactors because it ignores internal structure. Examples: [tests.md](tests.md). Mocking: [mocking.md](mocking.md).
 
+## What a test is worth
+
+A test earns its place only when it protects behaviour a user or caller relies on, or a bug that happened. Never pin one-off wording, a decision made once, or text the user may change. Do not write such a test; do not leave it for review to remove. Wording that a caller or user relies on is behaviour, for example a verdict heading or a hook line a script parses: a test on it is allowed. A Tier 0 change (no behaviour change) needs no new test. Every behaviour change still ships with a test.
+
 ## Seams
 
 A **seam** is the public boundary you test at, where you observe behaviour without reaching inside. Tests live at seams.

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Release checks for 0.13.2 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
+# Release checks for 0.14.0 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
 set -uo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,7 +19,7 @@ changelog=CHANGELOG.md
 contrib=CONTRIBUTING.md
 
 # --- AC35: version, table, counts, notes ---
-eq "plugin.json version" 0.13.2 "$(jq -r .version "$plugin" 2>/dev/null)"
+eq "plugin.json version" 0.14.0 "$(jq -r .version "$plugin" 2>/dev/null)"
 eq "marketplace.json plugin entry has no version key (plugin.json is the only version)" false "$(jq -r '.plugins[0] | has("version")' "$market" 2>/dev/null)"
 has "table row eval-plan" '`ordo:eval-plan`' "$readme"
 has "table row retro" '`ordo:retro`' "$readme"
@@ -47,6 +47,7 @@ has "0.12.0 note" '- 0.12.0 ' "$changelog"
 has "0.13.0 note (AC41)" '- 0.13.0 ' "$changelog"
 has "0.13.1 note" '- 0.13.1 ' "$changelog"
 has "0.13.2 note" '- 0.13.2 ' "$changelog"
+has "0.14.0 note" '- 0.14.0 ' "$changelog"
 icon=plugins/ordo/.claude-plugin/icon.png
 eq "listing icon is a 1024 x 1024 PNG under 2 MB" "PNG 1024 1024 small" "$(python3 - "$icon" <<'PY' 2>/dev/null
 import struct,sys,os
@@ -113,6 +114,10 @@ both "workflow: git rules apply unless git_rules off (AC7)" 'ordo git_rules: off
 both "workflow: guard switch separate from git_rules (AC8)" 'ordo guard_hook: off' 'does not switch off the guard hook' "$wf"
 [ "$(sed -n 3p "$wf" 2>/dev/null | cut -c1-13)" = "description: " ] && ok || bad "workflow line 3 is not a description"
 if grep -qE '(^| )(I|my|me)( |$)' "$wf" 2>/dev/null; then bad "workflow text still has I/my/me"; else ok; fi
+# worth-it T2a: Tier 0 cases, not-Tier-0 clause, Tier 1 criteria in the commit message (AC4, AC5, AC13)
+both "workflow: Tier 0 names the four cases (AC4)" '- **Tier 0**, no behaviour change' 'add an asset, raise a version, change doc wording, or make a user'\''s direct "change X to Y"' "$wf"
+both "workflow: a direct change that alters behaviour or hits a Tier 2 trigger is not Tier 0 (AC5)" '- **Tier 0**, no behaviour change' 'is not Tier 0: it follows its normal tier' "$wf"
+both "workflow: Tier 1 criteria go into the merge commit message (AC13)" '- **Tier 1**, behaviour change' 'so `git log --grep` finds them' "$wf"
 
 # watch-helpers T3a: "Watching helpers" in the workflow skill (AC1, AC2, AC4, AC5, AC10, AC11, AC14-AC19, AC24, AC27, AC28)
 both "workflow watch: switch condition and same-response start (AC1, AC24)" 'Unless `ordo stall_watch: off` (switch rules above)' 'every helper agent or job started in the background gets a watch started in the same response, with no guess about how long it takes' "$wf"
@@ -569,6 +574,7 @@ sec_has "eval-plan after the run: eval_budget off comparison, no cost deviation 
 rf=plugins/ordo/skills/refine/SKILL.md
 has "refine: po_acceptance_tier1 note at its step (AC18)" 'A Tier 1 refine run makes `ordo:po` acceptance at the end required (skipped when `ordo po_acceptance_tier1: off`; switch rule: `ordo:workflow`).' "$rf"
 has "refine: commit line points to git_rules (AC7)" 'Committing it follows the project'\''s git rules (`ordo git_rules`: the user'\''s permission unless that switch is off).' "$rf"
+sec_has "refine step 5: Tier 1 criteria go into the merge commit message (AC13)" "$rf" '## 5. ' 'go into the merge commit message'
 has "diagnose: fix step notes the dev_helper switch for the tier" '(Tier 1+ fixes go to the `ordo:dev` agent with the test as the verify step; skipped when `ordo dev_helper_tier1` or `ordo dev_helper_tier2` is off for that tier: you write the fix yourself, test-first; switch rule: `ordo:workflow`)' plugins/ordo/skills/diagnose/SKILL.md
 for f in eval-plan refine diagnose; do
   if grep -qE '(^| )(I|my|me)( |$)' "plugins/ordo/skills/$f/SKILL.md"; then bad "$f has I/my/me"; else ok; fi
@@ -786,6 +792,25 @@ prt=.github/pull_request_template.md
 has "PR template asks what changed" 'What changed' "$prt"
 has "PR template asks which tests ran" 'Which tests ran' "$prt"
 has "PR template asks about CHANGELOG" 'CHANGELOG.md updated' "$prt"
+
+# --- worth-it T1: a test earns its place; over-pins (AC1-AC3, AC9-AC12); one short phrase per rule, checked inside its own section ---
+tdd_skill=plugins/ordo/skills/tdd/SKILL.md
+cr=plugins/ordo/agents/code-reviewer.md
+qa_agent=plugins/ordo/agents/qa.md
+sec_has "tdd: a test earns its place (AC1)" "$tdd_skill" '## What a test is worth' 'earns its place only when it protects behaviour'
+sec_has "tdd: wording a caller relies on is behaviour (AC2)" "$tdd_skill" '## What a test is worth' 'Wording that a caller or user relies on is behaviour'
+sec_has "tdd: Tier 0 needs no new test (AC3)" "$tdd_skill" '## What a test is worth' 'A Tier 0 change (no behaviour change) needs no new test'
+has "code-reviewer: named over-pin exception to the test-quality sentence (AC9)" 'Named exception, over-pinning' "$cr"
+sec_has "qa: one-off wording is not untested (AC10)" "$qa_agent" '## 1. Coverage' 'One-off wording is not untested'
+sec_has "qa: flags over-pins (AC10)" "$qa_agent" '## 2. Test quality' '**Over-pin**: the test pins'
+sec_has "goal: over-pin exception in Review rounds (AC11, AC12)" "$goal_skill" '## Review rounds' 'for over-pins only'
+sec_has "code-reviewer: over-pin exception beside the shared block (AC11, AC12)" "$cr" '## Findings and rounds' 'for over-pins only'
+sec_has "qa: over-pin exception beside the shared block (AC11, AC12)" "$qa_agent" '## Findings and rounds' 'for over-pins only'
+
+# worth-it T2b: short BA revise (AC6-AC8); one short phrase per rule, checked inside its own section
+sec_has "refine: short revise returns changed lines as old -> new (AC6, AC8)" "$rf" '## Short revise' 'returns each changed line as `old → new`'
+sec_has "ba: short revise is the one case that returns changed lines (AC8)" plugins/ordo/agents/ba.md '## Mode B: revise' 'the one case that returns changed lines'
+has "workflow: spec decision mid-build gets the short BA revise (AC6, AC8)" 'gets the short BA revise in `ordo:refine`' "$wf"
 
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

@@ -50,7 +50,7 @@ One measured run on 2026-11-18, with Opus 5.5 as the main session and Sonnet 5.5
 
 ordo adds process, and process costs time and tokens. Skip it, or switch parts of it off, when:
 
-- the change is tiny and one-off (a typo, a config value, a rename): Tier 0 already skips most of it, but even the tier statement is overhead you may not want;
+- the change is tiny and one-off (adding an asset, raising a version, changing doc wording, a direct "change X to Y"): Tier 0 already skips most of it, but even the tier statement is overhead you may not want;
 - the script is a throwaway you will not keep;
 - you want no review and no process at all: use `claude plugin disable`, or turn steps off with the switches below;
 - cost matters more than review: each dev, review and acceptance step is a further model run; the `dev_helper_*`, `code_review_*`, `plan_review`, `qa_check` and `po_acceptance_*` switches turn them off one by one, and light mode (see Switches) keeps Tier 2 and drops the Tier 1 helper and review.

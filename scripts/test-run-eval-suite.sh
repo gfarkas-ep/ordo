@@ -53,7 +53,7 @@ rmdir "$copy/plugins/ordo/evals/zz-fake-unassigned"
 out=$(bash "$suite" --dry-run --runs 2 -j 3 2>&1) && rc=0 || rc=$?
 check "dry-run exits 0" test "$rc" -eq 0
 line() { grep -- "^\[$1\] " <<<"$out" || true; }
-for b in ba ba-readers po trigger refine-read reader-write reader-nowrite bash-skills noagent; do
+for b in ba ba-readers po trigger refine-read reader-write reader-nowrite bash-skills worth-it noagent; do
   l=$(line "$b")
   check "dry-run has a line for $b" test -n "$l"
   check "$b gets --runs 2" has "$l" "--runs 2"
@@ -87,7 +87,7 @@ check "--batch limits the batches" bash -c '[ "$(grep -c "^\[" <<<"$1")" -eq 1 ]
 # --- Seam 3: summary parsing ------------------------------------------------
 res="$work/results"
 mkdir -p "$res"
-batch_names="ba ba-readers po trigger refine-read reader-write reader-nowrite bash-skills noagent"
+batch_names="ba ba-readers po trigger refine-read reader-write reader-nowrite bash-skills worth-it noagent"
 # case names of a batch, read from the tree (tag = batch name; noagent = evals-noagent/)
 cases_of() {
   local d

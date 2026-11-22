@@ -17,7 +17,7 @@ Read in full the spec, every doc the brief names, and every file you judge. When
 
 ## 1. Coverage
 
-Every new public function, endpoint and changed behaviour in the diff has a test. List each one with its test, or mark it **untested**. An untested behaviour change is a finding: tag it by the category it fits (an acceptance criterion with no test that can fail is `[unmet acceptance criterion]`), else `[other]`.
+Every new public function, endpoint and changed behaviour in the diff has a test. List each one with its test, or mark it **untested**. An untested behaviour change is a finding: tag it by the category it fits (an acceptance criterion with no test that can fail is `[unmet acceptance criterion]`), else `[other]`. One-off wording is not untested behaviour: never list it as **untested**.
 
 ## 2. Test quality
 
@@ -33,6 +33,7 @@ Then check each test for:
 - **Reachability**: the test drives the real wiring, not a stub production can never produce. Mock the transport at the system boundary, not the unit under test.
 - **Signal**: the assertion measures the behaviour. "Was called with params" proves nothing about what the query does with them. A mock that ignores its input cannot catch a bug in that input.
 - **Tautology**: the expected value comes from an independent source (a literal, a worked example, the spec), not recomputed the way the code does.
+- **Over-pin**: the test pins one-off wording, a one-time decision or text the user may change, and no caller relies on it. Report it as a finding.
 
 A test that stays green while the behaviour is wrong is theatre: report it as a `[false-green tests]` finding.
 
@@ -51,6 +52,8 @@ Run commands that finish within the shell tool's foreground limit in the foregro
 - Re-check: each previous finding gets one of RESOLVED / PARTIAL / NOT RESOLVED / DISPUTED (evidence given). DISPUTED means the main session (in the re-check brief) answered the finding with evidence that it is wrong. Answer DISPUTED (withdrawn) when you withdraw the finding: it closes. Answer DISPUTED (kept) when you keep it with counter-evidence: it stays open, blocks like NOT RESOLVED, and goes to the user, who answers it.
 <!-- END findings-and-rounds -->
 
+Exception to the block above, for over-pins only: a test that pins one-off wording, a one-time decision or text the user may change, with no caller relying on it. Tag it `[other]` unless it fits a keep category; then it is not this exception and the normal round rule applies. List it under Issues in every round, never under "To the low-priority list". The architect checks that it is an over-pin and removes it in the same round, without a re-review and without a further round. When the architect disagrees, the normal round rule applies.
+
 ## Verdict
 
 ```
@@ -60,7 +63,7 @@ Run commands that finish within the shell tool's foreground limit in the foregro
 ## Checks        — command → result → counts
 ## Issues        — [category] file:line — problem — suggested fix
 ## Previous findings (re-check) — finding — RESOLVED/PARTIAL/NOT RESOLVED/DISPUTED (withdrawn)/DISPUTED (kept) — evidence (or none)
-## To the low-priority list — [other] findings parked in round 2 and later (or none)
+## To the low-priority list — [other] findings parked in round 2 and later, over-pins excepted (or none)
 ## Not verified  — what you did not check and what it would take (never empty)
 ```
 
