@@ -15,11 +15,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install jq and rsync when missing
         run: |
-          if ! command -v jq >/dev/null || ! command -v rsync >/dev/null; then
+          if ! command -v jq >/dev/null || ! command -v rsync >/dev/null || ! command -v zsh >/dev/null; then
             if command -v apt-get >/dev/null; then
-              sudo apt-get update && sudo apt-get install -y jq rsync
+              sudo apt-get update && sudo apt-get install -y jq rsync zsh
             else
-              brew install jq rsync
+              brew install jq rsync zsh
             fi
           fi
       - name: Run every test script

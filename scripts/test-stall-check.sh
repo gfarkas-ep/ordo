@@ -102,16 +102,21 @@ out=$( trap "$KILL" EXIT; sh -c 'echo $PPID' >"$work/me"; me=$(cat "$work/me"); 
 [ -z "$out" ] && ok "baseline check prints nothing" || bad "baseline printed (stdout: [$out])"
 
 # missing transcript and broken symlink: no crash, size 0, at most one stderr line, CPU check still runs
+# also under dash (Linux /bin/sh): a failed redirection on a special built-in ends a dash script
+shells=sh; command -v dash >/dev/null 2>&1 && shells='sh dash'
+for sh_cmd in $shells; do
 for kind in missing broken; do
+  rm -f "$work/t-$kind"
   t=$work/t-$kind
   [ $kind = broken ] && ln -s "$work/no-such-target" "$t"
   out=$( trap "$KILL" EXIT; sh -c 'echo $PPID' >"$work/me"; me=$(cat "$work/me"); sleep 31 | cat >/dev/null & sleep 0.3
-    sh "$S" --transcript "$t" --check 1 --max-checks 3 --root "$me" 2>"$work/err" ); rc=$?
-  [ "$rc" = 0 ] && ok "$kind transcript: exit 0" || bad "$kind transcript: exit $rc"
-  want "$kind transcript: size reads 0, CPU check still runs, idle cat named" '^suspect: no growth, no child CPU; transcript=0; idle: .*[0-9] cat( |$)'
-  want "$kind transcript: note on stdout" "^note: cannot read transcript .*t-$kind, size counted as 0"
-  [ "$(printf '%s\n' "$out" | grep -c '^note:')" = 1 ] && ok "$kind transcript: the note comes once" || bad "$kind transcript: note count (stdout: [$out])"
-  [ "$(wc -l < "$work/err" | tr -d ' ')" -le 1 ] && ok "$kind transcript: at most one stderr line" || bad "$kind transcript: stderr: $(cat "$work/err")"
+    $sh_cmd "$S" --transcript "$t" --check 1 --max-checks 3 --root "$me" 2>"$work/err" ); rc=$?
+  [ "$rc" = 0 ] && ok "$sh_cmd $kind transcript: exit 0" || bad "$sh_cmd $kind transcript: exit $rc"
+  want "$sh_cmd $kind transcript: size reads 0, CPU check still runs, idle cat named" '^suspect: no growth, no child CPU; transcript=0; idle: .*[0-9] cat( |$)'
+  want "$sh_cmd $kind transcript: note on stdout" "^note: cannot read transcript .*t-$kind, size counted as 0"
+  [ "$(printf '%s\n' "$out" | grep -c '^note:')" = 1 ] && ok "$sh_cmd $kind transcript: the note comes once" || bad "$sh_cmd $kind transcript: note count (stdout: [$out])"
+  [ "$(wc -l < "$work/err" | tr -d ' ')" -le 1 ] && ok "$sh_cmd $kind transcript: at most one stderr line" || bad "$sh_cmd $kind transcript: stderr: $(cat "$work/err")"
+done
 done
 
 # --file growth counts as growth (flat transcript)

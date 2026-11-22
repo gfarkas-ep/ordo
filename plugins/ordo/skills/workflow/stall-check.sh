@@ -168,7 +168,7 @@ while :; do
   n=$((n + 1))
   elapsed=$(((n - 1) * every))
   t=$(size_of "$transcript")
-  if [ "$n" = 1 ] && [ "$t" = 0 ] && ! { : < "$transcript"; } 2>/dev/null; then
+  if [ "$n" = 1 ] && [ "$t" = 0 ] && ! ( : < "$transcript" ) 2>/dev/null; then
     echo "stall-check: cannot read transcript $transcript, size counted as 0" >&2
     say "note: cannot read transcript $transcript, size counted as 0"
   fi

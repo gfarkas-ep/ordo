@@ -1,5 +1,5 @@
 #!/bin/bash
-# Release checks for 0.13.0 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
+# Release checks for 0.13.1 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
 set -uo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,7 +19,7 @@ changelog=CHANGELOG.md
 contrib=CONTRIBUTING.md
 
 # --- AC35: version, table, counts, notes ---
-eq "plugin.json version" 0.13.0 "$(jq -r .version "$plugin" 2>/dev/null)"
+eq "plugin.json version" 0.13.1 "$(jq -r .version "$plugin" 2>/dev/null)"
 eq "marketplace.json plugin entry has no version key (plugin.json is the only version)" false "$(jq -r '.plugins[0] | has("version")' "$market" 2>/dev/null)"
 has "table row eval-plan" '`ordo:eval-plan`' "$readme"
 has "table row retro" '`ordo:retro`' "$readme"
@@ -45,6 +45,7 @@ has "0.10.0 note" '- 0.10.0 ' "$changelog"
 has "0.11.0 note" '- 0.11.0 ' "$changelog"
 has "0.12.0 note" '- 0.12.0 ' "$changelog"
 has "0.13.0 note (AC41)" '- 0.13.0 ' "$changelog"
+has "0.13.1 note" '- 0.13.1 ' "$changelog"
 has "hook section" '## Safety hook' "$readme"
 has "eval-audit documented" 'scripts/eval-audit.sh' "$contrib"
 

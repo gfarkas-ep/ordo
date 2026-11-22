@@ -27,6 +27,7 @@ has "triggers: push" '  push:' "$wf"
 has "triggers: pull_request" '  pull_request:' "$wf"
 eq "linux job runs on ubuntu-latest" 1 "$(job_block linux | grep -cE '^    runs-on: ubuntu-latest$')"
 eq "workflow has no continue-on-error" 0 "$(grep -c 'continue-on-error' "$wf")"
+has "install step installs zsh on ubuntu (test-feedback F1 runs under zsh)" 'apt-get install -y jq rsync zsh' "$wf"
 eq "permissions: contents: read, nothing else" "permissions:|  contents: read" "$(awk '/^permissions:/{p=1} p&&/^[^ ]/&&!/^permissions:/{p=0} p&&NF' "$wf" | paste -sd'|' -)"
 for j in linux; do
   eq "$j: checkout by version tag" 1 "$(job_block $j | grep -cE 'uses: actions/checkout@v[0-9]+$')"
