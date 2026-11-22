@@ -1,5 +1,5 @@
 #!/bin/bash
-# Release checks for 0.13.1 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
+# Release checks for 0.13.2 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
 set -uo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,7 +19,7 @@ changelog=CHANGELOG.md
 contrib=CONTRIBUTING.md
 
 # --- AC35: version, table, counts, notes ---
-eq "plugin.json version" 0.13.1 "$(jq -r .version "$plugin" 2>/dev/null)"
+eq "plugin.json version" 0.13.2 "$(jq -r .version "$plugin" 2>/dev/null)"
 eq "marketplace.json plugin entry has no version key (plugin.json is the only version)" false "$(jq -r '.plugins[0] | has("version")' "$market" 2>/dev/null)"
 has "table row eval-plan" '`ordo:eval-plan`' "$readme"
 has "table row retro" '`ordo:retro`' "$readme"
@@ -46,6 +46,15 @@ has "0.11.0 note" '- 0.11.0 ' "$changelog"
 has "0.12.0 note" '- 0.12.0 ' "$changelog"
 has "0.13.0 note (AC41)" '- 0.13.0 ' "$changelog"
 has "0.13.1 note" '- 0.13.1 ' "$changelog"
+has "0.13.2 note" '- 0.13.2 ' "$changelog"
+icon=plugins/ordo/.claude-plugin/icon.png
+eq "listing icon is a 1024 x 1024 PNG under 2 MB" "PNG 1024 1024 small" "$(python3 - "$icon" <<'PY' 2>/dev/null
+import struct,sys,os
+p=sys.argv[1]; b=open(p,'rb').read(24)
+w,h=struct.unpack('>II',b[16:24]) if b[:8]==b'\x89PNG\r\n\x1a\n' else (0,0)
+print('PNG' if b[:4]==b'\x89PNG' else 'not-png', w, h, 'small' if os.path.getsize(p)<2*1024*1024 else 'big')
+PY
+)"
 has "hook section" '## Safety hook' "$readme"
 has "eval-audit documented" 'scripts/eval-audit.sh' "$contrib"
 
