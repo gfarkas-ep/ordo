@@ -1,6 +1,6 @@
 # Support
 
-Support is through GitHub issues only. Use the issue templates: a bug report for something broken, a feature request for an idea.
+Bugs and feature requests go in GitHub issues. Use the issue templates: a bug report for something broken, a feature request for a concrete idea. Questions, early ideas and how you use ordo go in GitHub Discussions.
 
 Support is best-effort. No response time is promised.
 

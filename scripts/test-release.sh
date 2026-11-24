@@ -683,7 +683,8 @@ has "CONTRIBUTING: test-first" 'test-first' "$contrib"
 has "CONTRIBUTING: may be rejected" 'may be rejected if it does not fit' "$contrib"
 has "SECURITY: private vulnerability reporting" 'GitHub private vulnerability reporting' SECURITY.md
 has "SECURITY: no public issue" 'Do not open a public issue' SECURITY.md
-has "SUPPORT: issues only" 'GitHub issues only' SUPPORT.md
+has "SUPPORT: bugs and feature requests in issues" 'Bugs and feature requests go in GitHub issues' SUPPORT.md
+has "SUPPORT: questions in Discussions" 'go in GitHub Discussions' SUPPORT.md
 has "SUPPORT: no response time" 'No response time is promised' SUPPORT.md
 for t in bug_report feature_request; do
   has "$t template front matter" 'name: ' ".github/ISSUE_TEMPLATE/$t.yml"
