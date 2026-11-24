@@ -1,5 +1,5 @@
 #!/bin/bash
-# Release checks for 0.14.1 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
+# Release checks for 0.15.0 (AC15, AC23, AC26, AC35, AC36, AC38; works-on-its-own AC9, AC10, AC12). Free: reads repo files only, no model call.
 set -uo pipefail
 
 root=$(cd "$(dirname "$0")/.." && pwd)
@@ -19,7 +19,7 @@ changelog=CHANGELOG.md
 contrib=CONTRIBUTING.md
 
 # --- AC35: version, table, counts, notes ---
-eq "plugin.json version" 0.14.1 "$(jq -r .version "$plugin" 2>/dev/null)"
+eq "plugin.json version" 0.15.0 "$(jq -r .version "$plugin" 2>/dev/null)"
 # frontmatter must be strict YAML (GitHub's renderer and other tools reject it otherwise):
 # no unquoted ": " in a plain value, no unquoted ":" inside a [flow, list]
 for f in plugins/ordo/skills/*/SKILL.md plugins/ordo/agents/*.md; do
@@ -36,16 +36,18 @@ has "table row retro" '`ordo:retro`' "$readme"
 has "table row goal" '`ordo:goal`' "$readme"
 has "table row workflow" '`ordo:workflow`' "$readme"
 has "table row feedback" '`ordo:feedback`' "$readme"
+has "table row improve" '`ordo:improve`' "$readme"
+has "table row coach" '`ordo:coach`' "$readme"
 
 num() { case "$1" in
-  six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;; eleven) echo 11;; *) echo "?";; esac; }
+  six) echo 6;; seven) echo 7;; eight) echo 8;; nine) echo 9;; ten) echo 10;; eleven) echo 11;; twelve) echo 12;; *) echo "?";; esac; }
 skills_dirs=$(find plugins/ordo/skills -mindepth 1 -maxdepth 1 -type d | wc -l | tr -d ' ')
 agents_files=$(find plugins/ordo/agents -mindepth 1 -maxdepth 1 -name '*.md' | wc -l | tr -d ' ')
-eq "skill dir count" 11 "$skills_dirs"
+eq "skill dir count" 12 "$skills_dirs"
 line3=$(sed -n 3p "$readme")
 agents_word=$(printf '%s' "$line3" | sed -n 's/.*[. ]\([A-Za-z]*\) agents and \([a-z]*\) skills.*/\1/p' | tr 'A-Z' 'a-z')
 skills_word=$(printf '%s' "$line3" | sed -n 's/.*agents and \([a-z]*\) skills.*/\1/p')
-eq "README line 3 says eleven skills" eleven "$skills_word"
+eq "README line 3 says twelve skills" twelve "$skills_word"
 eq "README skills count matches dirs" "$skills_dirs" "$(num "$skills_word")"
 eq "README agents count matches files" "$agents_files" "$(num "$agents_word")"
 has "0.7.0 note" '- 0.7.0 ' "$changelog"
@@ -57,6 +59,7 @@ has "0.12.0 note" '- 0.12.0 ' "$changelog"
 has "0.13.0 note (AC41)" '- 0.13.0 ' "$changelog"
 has "0.13.1 note" '- 0.13.1 ' "$changelog"
 has "0.13.2 note" '- 0.13.2 ' "$changelog"
+has "0.15.0 note" '- 0.15.0 ' "$changelog"
 has "0.14.1 note" '- 0.14.1 ' "$changelog"
 has "0.14.0 note" '- 0.14.0 ' "$changelog"
 icon=plugins/ordo/.claude-plugin/icon.png
@@ -73,7 +76,10 @@ has "eval-audit documented" 'scripts/eval-audit.sh' "$contrib"
 # --- AC36: running the evals (scoped to that CONTRIBUTING line) ---
 evals_line=$(grep -F -- '- Running the evals:' "$contrib" | head -1)
 case "$evals_line" in *'(tag `bash-skills`) need `--scaffold` and `--allow-tools Bash`'*) ok;; *) bad "evals line lacks bash-skills '--allow-tools Bash'";; esac
-for c in hook-blocks-rebase eval-plan-before-run eval-plan-after-run retro-proposes-only retro-no-autotrigger; do
+for _w in '`dev-agent`' '--allow-tools Bash' '--allow-tools Edit' '--allow-tools Write'; do
+  case "$evals_line" in *"$_w"*) ok;; *) bad "evals line lacks $_w for dev-agent";; esac
+done
+for c in hook-blocks-rebase eval-plan-before-run eval-plan-after-run retro-proposes-only retro-no-autotrigger dev-dispatch-report qa-fails-unmet-criterion diagnose-before-code decision-writes-adr consult-panel-seats feedback-draft-not-sent grill-asks-one-round; do
   case "$evals_line" in *"\`$c\`"*) ok;; *) bad "evals line lacks $c";; esac
   stated=$(printf '%s' "${evals_line#*\`$c\`}" | grep -o '(tag `[a-z-]*`)' | head -1 | sed 's/(tag `\(.*\)`)/\1/')
   actual=$(sed -n 's/^tags: \[\(.*\)\].*/\1/p' "plugins/ordo/evals/$c/prompt.md" | head -1)
@@ -196,7 +202,7 @@ fb_sec "nothing sent without a yes on the exact text (AC31, AC32)" '## Rules' 'S
 fb_sec "only network action is the gh issue create (AC38)" '## Rules' 'The only network action this skill may take is the `gh issue create` of the Send step.'
 fb_sec "sources of facts: the ordo key lines only through the settings command, no transcript, no hostname (AC38)" '## Rules' 'Gather facts only from this conversation, the usage file (through the helper), the plugin'\''s own `plugin.json`, `claude --version`, the operating system name, the `ordo <key>:` lines of the project and global `CLAUDE.md` (only through `usage-report.py settings`; nothing else from those files) and the private-terms list (through the helper). Read no transcript file. Never read, ask for or print the hostname.'
 fb_sec "settings from the helper, in the project dir, level names only (AC52)" '## Report an issue' 'from `usage-report.py settings` run from the project'\''s working directory (the session'\''s working directory): one line per setting with its value and its level `project`, `global` or `default`, never a file path.'
-fb_sec "settings list covers all 13 switches and 7 values, logging on or off (AC52)" '## Report an issue' 'It lists all 13 switches and the 7 settings that hold a value, whether or not usage logging is on.'
+fb_sec "settings list covers all 13 switches and 9 values, logging on or off (AC52)" '## Report an issue' 'It lists all 13 switches and the 9 settings that hold a value, whether or not usage logging is on.'
 fb_sec "settings output goes under the section label unchanged (AC26, AC52)" '## Report an issue' 'Under `### ordo switches and settings in use` put the output of `usage-report.py settings` unchanged.'
 fb_sec "settings list stays when the summary is dropped (AC28)" '## Report an issue' 'The settings list is not part of the summary and stays in the text when the summary is dropped.'
 fb_sec "redaction covers the settings list and the summary (AC29)" '## Report an issue' 'the whole text, title included, with the settings list and the summary in it, goes through `usage-report.py redact`.'
@@ -269,12 +275,12 @@ done
 # --- AC1 negative: no agent or skill file (except goal) uses backlog/roadmap/lessons for anything else ---
 # Rule: after removing the file names ROADMAP.md and LESSONS.md, "backlog" and "roadmap" must not appear
 # in any agent file or skill .md file (SKILL.md and helpers) other than skills/goal; "lesson(s)" is allowed only in skills/retro
-# (it defines what retro proposes, in its SKILL.md). Matching is case-insensitive, whole words.
+# (it defines what retro proposes, in its SKILL.md), agents/coach.md and skills/improve/ (the self-improvement loop works on lessons). Matching is case-insensitive, whole words.
 glossary_hits() { # file...; prints "file:line:text" for each forbidden use
   local f pat
   for f in "$@"; do
     pat='backlog|roadmap|lessons?'
-    case "$f" in */skills/retro/SKILL.md) pat='backlog|roadmap';; esac
+    case "$f" in */skills/retro/SKILL.md|*/agents/coach.md|*/skills/improve/*) pat='backlog|roadmap';; esac
     sed -E 's/ROADMAP\.md|LESSONS\.md//g' "$f" | grep -niwE "$pat" | sed "s|^|$f:|"
   done
 }
@@ -296,6 +302,15 @@ has "retro writes LESSONS.md" 'LESSONS.md' plugins/ordo/skills/retro/SKILL.md
 has "retro tag" '"ordo plugin"' plugins/ordo/skills/retro/SKILL.md
 retro_line=$(grep -F '`ordo:retro`' "$readme" | head -1)
 case "$retro_line" in *LESSONS.md*) ok;; *) bad "README retro line lacks LESSONS.md";; esac
+
+# --- self-improve T3 (AC14, AC18, AC19): retro date stamp, equal check, improve exception; each pin sits inside its own section of the retro skill ---
+retro_sec() { # name heading string: the string must sit inside that section of the retro skill
+  local sec; sec=$(awk -v h="$2" 'index($0,h)==1{p=1;next} /^## /{p=0} p' plugins/ordo/skills/retro/SKILL.md)
+  case "$sec" in *"$3"*) ok;; *) bad "retro: $1: '$3' missing in section '$2'";; esac
+}
+retro_sec "saved lesson starts with the save date (AC19)" '## After approval' 'starts with `YYYY-MM-DD` and a space'
+retro_sec "equal check ignores the date (AC19)" '## After approval' 'ignores the date'
+retro_sec "only improve may offer or run retro (AC14, AC18)" '## Starting' '`ordo:improve` may offer retro'
 
 # --- AC26: README documents round rule, side-request rule, principle check, question formats, retro change, hook ---
 has "README round rule 2-3 keep categories" 'rounds 2 and 3' "$readme"
@@ -549,8 +564,8 @@ cp "$tmpd/swapped.md" "$tmpd/swapped.orig"
 if bash scripts/sync-rules-block.sh "$tmpd/swapped.md" >/dev/null 2>&1; then bad "sync accepts END before BEGIN"; else ok; fi
 cmp -s "$tmpd/swapped.md" "$tmpd/swapped.orig" && ok || bad "sync changed a file with END before BEGIN"
 rm -rf "$tmpd"
-eq "agent file count stays six" 6 "$agents_files"
-eq "skill dir count stays eleven" 11 "$skills_dirs"
+eq "agent file count is seven" 7 "$agents_files"
+eq "skill dir count stays twelve" 12 "$skills_dirs"
 has "block: one re-review wording" 'In a re-check of a fix round, a NOT RESOLVED or DISPUTED (kept) previous finding' "$src"
 grep -qF '(Mode B)' "$src" && bad "$src still says (Mode B) in the verdict sentence" || ok
 has "block: re-check answers" 'each previous finding gets one of RESOLVED / PARTIAL / NOT RESOLVED / DISPUTED (evidence given)' "$src"
@@ -769,7 +784,7 @@ ulhas "how to clear" 'To clear it, ask the `ordo:feedback` skill in words (for e
 ulhas "how to turn off" 'To turn logging off, set the line `ordo usage_log: off`'
 ulhas "no network" 'The hooks make no network call and spawn no process;'
 ulhas "feedback: user-started only" '`/ordo:feedback` runs only when you start it'
-ulhas "feedback: settings list with level, no path, logging on or off" 'adds the list of all 13 switches and the 7 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on)'
+ulhas "feedback: settings list with level, no path, logging on or off" 'adds the list of all 13 switches and the 9 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on)'
 ulhas "feedback: full preview, explicit yes" 'prints the full text and sends nothing until you answer yes to that exact text'
 ulhas "feedback: gh or paste" 'with `gh issue create` when `gh` is installed, otherwise it prints the text and the new-issue link for you to paste'
 ulhas "feedback: repo address from plugin.json" 'The repository address is read from the `repository` field of `plugin.json` (`https://github.com/gfarkas-ep/ordo`); when that field is not set, nothing is sent and the text is only printed.'
@@ -822,6 +837,166 @@ sec_has "qa: over-pin exception beside the shared block (AC11, AC12)" "$qa_agent
 sec_has "refine: short revise returns changed lines as old -> new (AC6, AC8)" "$rf" '## Short revise' 'returns each changed line as `old → new`'
 sec_has "ba: short revise is the one case that returns changed lines (AC8)" plugins/ordo/agents/ba.md '## Mode B: revise' 'the one case that returns changed lines'
 has "workflow: spec decision mid-build gets the short BA revise (AC6, AC8)" 'gets the short BA revise in `ordo:refine`' "$wf"
+
+# self-improve T1a/T1b: every skill and every agent loads its own two add-on files (AC1-AC4, AC6); the load line is pinned whole, with its own folder or file name; `improve` (skill) and `coach` (agent) are excluded by name
+# addon_line <name> <skill|agent>: the exact line; the two forms differ in "when this skill loads" / "when you start" and "this skill's" / "this agent's"
+addon_line() {
+  local when=$([ "$2" = agent ] && echo 'when you start' || echo 'when this skill loads') own=$([ "$2" = agent ] && echo "this agent's" || echo "this skill's")
+  printf 'Add-ons: %s, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/%s.md` (global), then on `.claude/ordo/addons/%s.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace %s rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user'\''s yes, and the yes before a paid eval, which no add-on changes.\n' "$when" "$1" "$1" "$own"
+}
+addon_skills=$(for d in plugins/ordo/skills/*/; do n=$(basename "$d"); [ "$n" = improve ] || echo "$n"; done)
+addon_agents=$(for f in plugins/ordo/agents/*.md; do n=$(basename "$f" .md); [ "$n" = coach ] || echo "$n"; done)
+# addon_check <file> <own name> <skill|agent>: prints a reason and returns 1 unless the file holds its own line exactly once and that is its only Add-ons line (the exact-line check names the kind and the name, so another name's or the other kind's line fails it)
+addon_check() {
+  local f=$1 own=$2 kind=$3
+  [ "$(grep -cxF -- "$(addon_line "$own" "$kind")" "$f")" = 1 ] || { echo "$f: own add-on line not exactly once"; return 1; }
+  [ "$(grep -c '^Add-ons: ' "$f")" = 1 ] || { echo "$f: not exactly one Add-ons line"; return 1; }
+  return 0
+}
+# addon_placed <file>: yes when the closing --- of the frontmatter is followed by a blank line, the Add-ons line and a blank line (its own first paragraph)
+addon_placed() { awk '$0=="---"{c++; if(c==2){getline a; getline b; getline d; print (a=="" && b ~ /^Add-ons: / && d=="") ? "yes" : "no"; exit}}' "$1"; }
+for n in $addon_skills; do
+  msg=$(addon_check "plugins/ordo/skills/$n/SKILL.md" "$n" skill) && ok || bad "skill add-on line: $msg"
+  [ "$(addon_placed "plugins/ordo/skills/$n/SKILL.md")" = yes ] && ok || bad "skill add-on line is not the first paragraph after the frontmatter: $n"
+done
+for n in $addon_agents; do
+  msg=$(addon_check "plugins/ordo/agents/$n.md" "$n" agent) && ok || bad "agent add-on line: $msg"
+  [ "$(addon_placed "plugins/ordo/agents/$n.md")" = yes ] && ok || bad "agent add-on line is not the first paragraph after the frontmatter: $n"
+done
+# negative tests: another name's line, and the other kind's line, must fail
+atmp=$(mktemp); addon_line tdd skill > "$atmp"
+addon_check "$atmp" grill skill >/dev/null && bad "add-on check passes a line with the wrong skill name" || ok
+addon_line qa agent > "$atmp"
+addon_check "$atmp" dev agent >/dev/null && bad "add-on check passes a line with the wrong agent name" || ok
+addon_line dev skill > "$atmp"
+addon_check "$atmp" dev agent >/dev/null && bad "add-on check passes the skill form for an agent" || ok
+rm -f "$atmp"
+
+# self-improve T4: the coach agent (AC13, AC20, AC21, AC25, and the covered-lesson edge case); one short phrase per rule, checked inside its own section
+coach=plugins/ordo/agents/coach.md
+[ -f "$coach" ] && ok || bad "coach agent file missing (AC21)"
+eq "coach name" "name: coach" "$(sed -n 2p "$coach" 2>/dev/null)"
+eq "coach tools are exactly Read, Grep, Glob; no Write, Edit or Bash (AC21)" "tools: Read, Grep, Glob" "$(grep '^tools:' "$coach" 2>/dev/null)"
+[ -f "$coach" ] && [ "$(grep -c '^Add-ons: ' "$coach")" = 0 ] && ok || bad "coach carries an Add-ons line or is missing (it reads no add-on itself)"
+sec_has "coach Mode A: refuses before any case is drafted (AC20)" "$coach" '## Mode A: screen' 'Refuse before any case is drafted'
+for item in 'git permission' 'push' 'rebase' 'the guard hook' 'sending anything without the user'\''s yes' 'the yes before a paid eval'; do
+  sec_has "coach Mode A: refusal list names '$item' (AC20)" "$coach" '## Mode A: screen' "$item"
+done
+sec_has "coach Mode A: names the git_rules switch (AC20)" "$coach" '## Mode A: screen' '`ordo git_rules`'
+sec_has "coach Mode A: names the guard_hook switch (AC20)" "$coach" '## Mode A: screen' '`ordo guard_hook`'
+sec_has "coach Mode A: says so when no switch exists (AC20)" "$coach" '## Mode A: screen' 'say there is none'
+sec_has "coach Mode A: covered lesson reported before any paid run, quoted with path:line" "$coach" '## Mode A: screen' 'already covered by the base text or an add-on rule'
+sec_has "coach Mode A: covered report quotes the line with path:line" "$coach" '## Mode A: screen' 'quote the covering line with `path:line`'
+sec_has "coach Mode A: covered is reported before any paid run" "$coach" '## Mode A: screen' 'before any paid run'
+sec_has "coach Mode B: one change per candidate (AC25)" "$coach" '## Mode B: draft' 'differs from the current add-on in the scope folder by one change for this lesson'
+sec_has "coach Mode B: N candidates for one lesson (AC25)" "$coach" '## Mode B: draft' 'Return N candidate add-on files'
+sec_has "coach Mode B: size limit counts every line (AC13, AC25)" "$coach" '## Mode B: draft' 'within the size limit, counting every line'
+sec_has "coach Mode B: consolidates existing rules to fit (AC13)" "$coach" '## Mode B: draft' 'consolidate existing rules of that file'
+# the output blocks hold "## Screen" and "## Candidate" lines, which end a sec_has section: the output-line pins read the whole file
+has "coach output: Switch line takes one or both switches (AC20)" 'Switch: <ordo git_rules and/or ordo guard_hook | none>' "$coach"
+sec_has "coach Mode A: rebase and force push need both switches off (AC20)" "$coach" '## Mode A: screen' 'Rebase and force push need both off'
+[ "$(grep -cF 'Not read: <missing or unreadable files | none>' "$coach" 2>/dev/null)" = 2 ] && ok || bad "coach: the Not read line is not in both output blocks (improve parses it)"
+has "coach output: Consolidated line (improve parses it) (AC13)" 'Consolidated: <none | what was merged>' "$coach"
+sec_has "coach Mode B: consolidation only as the limit needs (AC13, AC25)" "$coach" '## Mode B: draft' 'plus only the consolidation the limit needs'
+sec_has "coach Mode B: never touches the case, graders, base files or other add-ons (AC21)" "$coach" '## Mode B: draft' 'never edit or propose changes to the eval case, the graders, the base files or other add-ons'
+sec_has "coach Mode B: never claims a candidate works" "$coach" '## Mode B: draft' 'never claim a candidate works'
+sec_has "coach Mode B: a candidate names nothing taken from the eval case (F7)" "$coach" '## Mode B: draft' 'names nothing taken from the eval case'
+
+# glossary allowance for "lesson(s)": retro, coach and skills/improve only; a planted lesson elsewhere, or in a look-alike path, must still be caught
+gl=$(mktemp -d); mkdir -p "$gl/plugins/ordo/agents" "$gl/plugins/ordo/skills/improve" "$gl/plugins/ordo/skills/improver" "$gl/plugins/ordo/skills/retro"
+for f in agents/coach.md skills/improve/SKILL.md skills/improve/extra.md skills/retro/SKILL.md agents/coachx.md skills/improver/SKILL.md; do printf 'one lesson here.\n' > "$gl/plugins/ordo/$f"; done
+[ -z "$(glossary_hits "$gl/plugins/ordo/agents/coach.md" "$gl/plugins/ordo/skills/improve/SKILL.md" "$gl/plugins/ordo/skills/improve/extra.md" "$gl/plugins/ordo/skills/retro/SKILL.md")" ] && ok || bad "glossary check flags 'lesson' in coach, improve or retro"
+[ -n "$(glossary_hits "$gl/plugins/ordo/agents/coachx.md")" ] && ok || bad "glossary allowance for lesson widened to agents/coachx.md"
+[ -n "$(glossary_hits "$gl/plugins/ordo/skills/improver/SKILL.md")" ] && ok || bad "glossary allowance for lesson widened to skills/improver"
+rm -rf "$gl"
+
+# self-improve T5a: the improve skill, start, screen and case (AC14-AC18, AC20, AC22); pins sit before any fence, since sec_has ends a section at any "## " line
+imp=plugins/ordo/skills/improve/SKILL.md
+has "README documents add-ons and the improve loop (AC35)" '## Add-ons and the improve loop' "$readme"
+has "README names addon_max_lines (AC35)" '`addon_max_lines`' "$readme"
+has "README names addon_scope (AC35)" '`addon_scope`' "$readme"
+sec_has "improve Case: ask once per run (AC11)" "$imp" '## Case' 'ask the user once per run which folder'
+sec_has "improve Case: no answer writes nothing (AC11 edge case)" "$imp" '## Case' 'with no answer write nothing'
+[ -f "$imp" ] && ok || bad "improve skill file missing"
+eq "improve name" "name: improve" "$(sed -n 2p "$imp" 2>/dev/null)"
+[ -f "$imp" ] && [ "$(grep -c '^Add-ons: ' "$imp")" = 0 ] && ok || bad "improve carries an Add-ons line or is missing (it reads no add-on itself)"
+has "improve description: user-started only (AC14)" 'Use only when the user explicitly asks for it' "$imp"
+has "improve description: never offered, never on its own (AC14)" 'Never offer it and never run it on your own.' "$imp"
+sec_has "improve Start: never offered or started on its own (AC14)" "$imp" '## Start' 'Never offer it, never suggest it and never start it on your own'
+sec_has "improve Start: a described lesson is used and nothing is asked (AC15)" "$imp" '## Start' 'the request describes the behaviour to change'
+sec_has "improve Start: a retro of this conversation is offered first (AC16)" "$imp" '## Start' 'an `ordo:retro` ran in this conversation'
+sec_has "improve Start: three choices, describe (AC17)" "$imp" '## Start' 'describe the behaviour'
+sec_has "improve Start: three choices, retro on this session (AC17)" "$imp" '## Start' 'run `ordo:retro` on this session now'
+sec_has "improve Start: three choices, saved ordo plugin lesson with its date (AC17)" "$imp" '## Start' 'a saved "ordo plugin" lesson from the `LESSONS.md` of the project, each with its date'
+sec_has "improve Start: retro's approval rule holds (AC18)" "$imp" '## Start' 'the user approves it as `ordo:retro` requires'
+sec_has "improve Start: one lesson per run (AC18)" "$imp" '## Start' 'One lesson per run'
+sec_has "improve Screen: coach Mode A before any case is drafted (AC20)" "$imp" '## Screen' 'Dispatch `ordo:coach` in Mode A before any case is drafted'
+sec_has "improve Screen: REFUSED or COVERED stop before any case or paid run (AC20)" "$imp" '## Screen' 'On REFUSED or COVERED report it and stop before any case or paid run'
+sec_has "improve Case: shown in full, used only after the user's yes (AC22)" "$imp" '## Case' 'Use the case only after the user'\''s yes'
+sec_has "improve Case: never changed after the yes (verifier separation)" "$imp" '## Case' 'After the yes the case is never changed'
+
+# self-improve T5c: the improve skill, plan, stages, choose and write (AC23-AC31, AC33)
+sec_has "improve Plan: loads ordo:eval-plan before any paid run (AC23)" "$imp" '## Plan' 'Load `ordo:eval-plan`'
+sec_has "improve Plan: N candidates default 2, max 3 (AC23)" "$imp" '## Plan' 'N candidates (default 2, at most 3)'
+sec_has "improve Plan: regression case names named for the user to check (AC23, AC28)" "$imp" '## Plan' 'named for the user to check'
+sec_has "improve Plan: no claude plugin eval before the user's explicit yes (AC23)" "$imp" '## Plan' 'Start no `claude plugin eval` command before the user'\''s explicit yes in their own message'
+sec_has "improve Plan: one yes covers the stages, more needs a new plan (AC23)" "$imp" '## Plan' 'One yes to the saved plan covers all its stages'
+sec_has "improve Stages: red check on the current stack (AC24)" "$imp" '## Stages' 'improve-eval.sh run --stage red'
+sec_has "improve Stages: red check passes, stop, no candidate (AC24)" "$imp" '## Stages' 'When any of the 3 runs passes, stop: the case does not capture the issue, and no candidate is written'
+sec_has "improve Stages: coach Mode B with the scope folder and limit (AC25)" "$imp" '## Stages' 'Dispatch `ordo:coach` in Mode B'
+sec_has "improve Stages: candidates written under candidates/ by improve (AC21, AC33)" "$imp" '## Stages' '`<root>/ordo/improve/candidates/`'
+sec_has "improve Stages: each candidate runs the lesson case 3 times in parallel (AC26)" "$imp" '## Stages' 'each candidate runs the lesson case 3 times, in parallel'
+sec_has "improve Stages: below 3/3 dropped and reported with its score (AC27)" "$imp" '## Stages' 'A candidate below 3/3 is dropped and reported with its score'
+sec_has "improve Stages: regression only for 3/3 candidates (AC28)" "$imp" '## Stages' 'Only a candidate at 3/3 runs the regression round'
+sec_has "improve Stages: regression is earlier cases and the plugin's cases for the target, not the suite (AC28)" "$imp" '## Stages' 'not the whole plugin suite'
+sec_has "improve Stages: no cases means the round is skipped with a note (AC28)" "$imp" '## Stages' 'skip the regression round and say so'
+sec_has "improve Stages: all below 3/3 means no change (AC27)" "$imp" '## Stages' 'no regression round and no change'
+sec_has "improve Stages: exit 3 voids the stage, never counted as a fail (F1)" "$imp" '## Stages' 'Exit 3 means the stage is void'
+sec_has "improve Stages: a grader that threw is fixed by a case change, not counted as a fail (F1)" "$imp" '## Stages' 'never count it as a fail'
+sec_has "improve Stages: the fail lines are read before a stage is judged (F2)" "$imp" '## Stages' '`fail <case> run <i> <grader>: <explanation>`'
+sec_has "improve Stages: red only when the lesson's own graders fail (F4)" "$imp" '## Stages' 'only when the failing graders are the ones that test the lesson itself'
+sec_has "improve Stages: red on setup or side graders alone stops before candidates (F4)" "$imp" '## Stages' 'only setup or side graders fail'
+sec_has "improve Plan: a case change after the yes needs an amended plan and a yes (F5)" "$imp" '## Plan' 'amended plan'
+sec_has "improve Plan: a yes given before the plan is shown does not count (AC23)" "$imp" '## Plan' 'A yes given before the plan is shown'
+sec_has "improve Case: grader types named (F6)" "$imp" '## Case' 'regex, tool_used, tool_order, file_exists, llm'
+sec_has "improve Case: regexes are JavaScript, case-insensitive by flags: i, never inline (F6)" "$imp" '## Case' 'a `flags: i` line, never an inline `(?i)`'
+sec_has "improve Case: wall-time estimate from earlier results, guess only when none (F6)" "$imp" '## Case' 'evals/results/'
+sec_has "improve Choose: pick one, reject all or drop the lesson (AC29)" "$imp" '## Choose and write' 'pick one candidate, reject all, or drop the lesson'
+sec_has "improve Choose: the add-on changes only after a pick (AC29)" "$imp" '## Choose and write' 'changes only after a pick'
+sec_has "improve Choose: written only through improve-eval.sh write (AC31, AC33)" "$imp" '## Choose and write' 'only through `improve-eval.sh write`'
+sec_has "improve Choose: accepted without an eval is written as not verified (AC30)" "$imp" '## Choose and write' '--result "not verified"'
+sec_has "improve Choose: eval-plan after-run comparison is shown (AC29)" "$imp" '## Choose and write' 'after-run comparison'
+
+# self-improve T5d: the improve skill, effective stack, history, restore, share, out of scope (AC5, AC6, AC32, AC34)
+sec_has "improve Stack: layers base, global, project (AC5)" "$imp" '## Stack, history and restore' 'base, global, project'
+sec_has "improve Stack: marks a rule overridden by a later layer (AC5)" "$imp" '## Stack, history and restore' 'mark a rule overridden by a later layer'
+sec_has "improve History: lists through improve-eval.sh history (AC31)" "$imp" '## Stack, history and restore' 'improve-eval.sh history'
+sec_has "improve Restore: through improve-eval.sh restore, the replaced file saved first (AC32)" "$imp" '## Stack, history and restore' 'improve-eval.sh restore'
+sec_has "improve Restore: only after the user names a version (AC32)" "$imp" '## Stack, history and restore' 'only after the user names the version'
+sec_has "improve Share: offered only for a verified change (AC34)" "$imp" '## Share' 'only for a change that was verified, never for one written as "not verified"'
+sec_has "improve Share: nothing drafted for sending before the user's yes (AC34)" "$imp" '## Share' 'Draft nothing for sending before the user'\''s yes'
+sec_has "improve Share: nothing sent without a further yes (AC34)" "$imp" '## Share' 'send nothing without a further yes'
+sec_has "improve Share: follows CONTRIBUTING.md (AC34)" "$imp" '## Share' '`CONTRIBUTING.md`'
+for item in 'git permission' 'push' 'rebase' 'the guard hook' 'sending anything without the user'\''s yes' 'the yes before a paid eval'; do
+  sec_has "improve Out of scope: names '$item' (AC6)" "$imp" '## Out of scope' "$item"
+done
+
+# self-improve T5 fix round 1 (code-reviewer): case never changed after the yes, declined-eval path, accepted marker, own --out, grants, history labels, share, limit warning
+sec_has "improve Plan: a change to a case file stops the run and needs a new yes (verifier separation)" "$imp" '## Plan' 'Any change to a case file stops the run, shows the case again and needs a new yes'
+sec_has "improve Plan: only fixes outside the case rerun without asking" "$imp" '## Plan' 'only a fix outside the case (arguments, `--out`, environment) reruns without asking'
+sec_has "improve Plan: declined eval still gets free coach candidates, no results (AC30)" "$imp" '## Plan' 'When the user declines the eval, no stage runs, `ordo:coach` is still dispatched in Mode B, and the table shows no results'
+sec_has "improve Case: names the tool grants the case needs" "$imp" '## Case' 'names the tool grants the case needs'
+sec_has "improve Stages: red and lesson calls pass the grants" "$imp" '## Stages' 'pass them with `--allow-tools <Tool>`'
+sec_has "improve Stages: each run call gets its own new --out folder" "$imp" '## Stages' 'its own new `--out` folder'
+sec_has "improve Stages: warns when the current add-on is over the limit" "$imp" '## Stages' 'warn when the current add-on has more lines than that limit'
+sec_has "improve Stages: regression uses only accepted lesson cases (AC28)" "$imp" '## Stages' 'only case folders that hold an `accepted` file'
+sec_has "improve Stages: grants come from the helper, not CONTRIBUTING.md" "$imp" '## Stages' 'its refusal message'
+sec_has "improve Choose: an accepted write marks the case folder with an accepted file (AC28)" "$imp" '## Choose and write' 'put a file `accepted` (the date, the history file name and the case'\''s tool grants) in that lesson'\''s case folder'
+sec_has "improve Choose: dropped, rejected or red-stopped lessons get no accepted file (AC28)" "$imp" '## Choose and write' 'get none'
+sec_has "improve History: entries labelled as the version replaced (AC32)" "$imp" '## Stack, history and restore' 'the version replaced by'
+sec_has "improve Restore: reads the previous line before the yes (AC32)" "$imp" '## Stack, history and restore' 'Read the entry'\''s `previous:` line before the yes'
+sec_has "improve Restore: a no-previous entry removes the add-on, warned (AC32)" "$imp" '## Stack, history and restore' 'removes the add-on'
+sec_has "improve Share: base edit only as a diff or in a user-named clone, never the installed plugin (AC33)" "$imp" '## Share' 'never in the installed plugin or `~/.claude/plugins/cache/`'
 
 echo "pass=$pass fail=$fail"
 [ "$fail" -eq 0 ]

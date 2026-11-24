@@ -3,6 +3,8 @@ name: refine
 description: Turn a request into a confirmed spec with acceptance criteria before planning, by interviewing the user and driving the ba agent. Use for new features or user-visible behaviour, vague requests such as "add a way for users to ...", and Tier 2 work. When the outcome is code, use this instead of ordo:grill alone; it runs the grill itself. Skip for Tier 0 changes (asset, version raise, doc wording, a direct "change X to Y"), explanations and questions.
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/refine.md` (global), then on `.claude/ordo/addons/refine.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Refine
 
 You are the architect. The BA writes the spec, the user answers its questions through you, the product owner later accepts against it. You never author or change the spec's content: changes go back through the BA.

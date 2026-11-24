@@ -3,6 +3,8 @@ name: consult-panel
 description: Architect + dev + qa + po review of a plan before any code. Use for Tier 2 work (hard to reverse, auth/security, real data, contract or schema change, or several modules) and whenever the user asks for a consult.
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/consult-panel.md` (global), then on `.claude/ordo/addons/consult-panel.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Consult panel
 
 You are the architect. The panel stress-tests your plan before code exists; the user approves the result.

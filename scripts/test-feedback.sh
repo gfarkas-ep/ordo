@@ -502,18 +502,19 @@ printf 'ordo usage_log: ON\n- ordo usage_log: on\n' > "$proj/CLAUDE.md"; printf 
 before=$(snapshot); sw; [ "$(snapshot)" = "$before" ] && pass "switch writes nothing" || fail "switch changed files"
 rm -f "$proj/CLAUDE.md" "$HOME/.claude/CLAUDE.md"; rm -rf "$LOGDIR"; mkdir -p "$LOGDIR"
 
-# ---------------------------------------------------------------- settings (AC52): all 13 switches and the 7 value settings, with their level
+# ---------------------------------------------------------------- settings (AC52): all 13 switches and the 9 value settings, with their level
 ST="$work/st"; mkdir -p "$ST"
 stg() { out=$(cd "$ST" && printf '' | python3 -I "$helper" settings "$@" 2>"$work/err"; echo "rc=$?"); rc=${out##*rc=}; out=${out%rc=*}; out=${out%$'\n'}; err=$(cat "$work/err"); }
 # want <key> <value> <level>: the line '- key: value (level)' is in the output
 want() { if has_line "- $1: $2 ($3)"; then pass "settings: $1 is $2 ($3)"; else fail "settings: want '- $1: $2 ($3)': $out"; fi; }
 reset_st() { rm -rf "$ST/CLAUDE.md" "$HOME/.claude/CLAUDE.md" "$HOME/CLAUDE.md"; }
 reset_st; stg
-if [ "$rc" = 0 ] && [ -z "$err" ] && [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 20 ]; then pass "settings: 20 lines (13 switches and 7 values), exit 0"; else fail "settings count: rc=$rc err=$err out=$out"; fi
+if [ "$rc" = 0 ] && [ -z "$err" ] && [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 22 ]; then pass "settings: 22 lines (13 switches and 9 values), exit 0"; else fail "settings count: rc=$rc err=$err out=$out"; fi
 for k in guard_hook git_rules eval_budget dev_helper_tier1 dev_helper_tier2 code_review_tier1 code_review_tier2 plan_review qa_check po_acceptance_tier1 po_acceptance_tier2 stall_watch; do want $k on default; done
 want usage_log off default
 want watch_check_minutes 5 default; want watch_report_minutes 10 default; want watch_check_by script default
 want reader_threshold_tokens 200000 default; want reader_threshold_files 10 default; want reader_cap_tokens 80000 default; want reader_cap_files 10 default
+want addon_max_lines 40 default; want addon_scope global default
 reset_st
 printf 'ordo guard_hook: off\nordo usage_log: on\nordo watch_check_minutes: 7\nordo reader_cap_files: 3\n' > "$HOME/.claude/CLAUDE.md"; stg
 want guard_hook off global; want usage_log on global; want watch_check_minutes 7 global; want reader_cap_files 3 global; want qa_check on default
@@ -527,6 +528,16 @@ printf 'ordo guard_hook: ON\n- ordo qa_check: off\nordo qa_check: off now\nordo 
 want guard_hook off global; want qa_check on default; want watch_check_minutes 7 global; want reader_cap_files 3 global; want reader_cap_tokens 80000 default
 printf 'ordo stall_watch: off\r\n  ordo qa_check: off  \r\nordo watch_check_minutes: 6\r\nordo reader_cap_files: 02\r\n' > "$ST/CLAUDE.md"; stg
 want stall_watch off project; want qa_check off project; want watch_check_minutes 6 project; want reader_cap_files 2 project
+# add-on settings (AC8, AC9, AC12): project beats global; an invalid value falls back to the next level or the default
+printf 'ordo addon_max_lines: 25\nordo addon_scope: ask\n' > "$HOME/.claude/CLAUDE.md"; stg
+want addon_max_lines 25 global; want addon_scope ask global
+printf 'ordo addon_max_lines: 60\nordo addon_scope: project\n' > "$ST/CLAUDE.md"; stg
+want addon_max_lines 60 project; want addon_scope project project
+printf 'ordo addon_max_lines: 0\nordo addon_scope: both\n' > "$ST/CLAUDE.md"; stg
+want addon_max_lines 25 global; want addon_scope ask global
+printf 'ordo addon_max_lines: abc\nordo addon_scope: both\n' > "$ST/CLAUDE.md"; rm -f "$HOME/.claude/CLAUDE.md"; stg
+want addon_max_lines 40 default; want addon_scope global default
+printf 'ordo guard_hook: off\nordo usage_log: on\nordo watch_check_minutes: 7\nordo reader_cap_files: 3\n' > "$HOME/.claude/CLAUDE.md"; rm -f "$ST/CLAUDE.md"
 # a project value that is invalid does not hide the global one; a missing, unreadable, non-UTF-8, over-1-MB or non-regular file is silent for its level
 rm -f "$ST/CLAUDE.md"; mkdir "$ST/CLAUDE.md"; stg
 want guard_hook off global; want watch_check_minutes 7 global; rmdir "$ST/CLAUDE.md"

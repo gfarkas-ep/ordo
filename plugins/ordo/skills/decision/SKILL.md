@@ -3,6 +3,8 @@ name: decision
 description: Records a hard-to-reverse decision as a short ADR in the project's docs/decisions/. Use after the user approves a Tier 2 plan, or when the user settles a design question worth remembering ("record this decision", "ADR").
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/decision.md` (global), then on `.claude/ordo/addons/decision.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Decision record
 
 An ADR records **why** something changed and what else was considered. The design document, where a project has one, holds the **current** design only. Keep history, incidents and rejected options in ADRs; keep the design document describing what is true now.

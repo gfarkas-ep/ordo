@@ -3,6 +3,8 @@ name: tdd
 description: 'Test-first method for any behaviour change: seams, red-green loop, what makes a test worth keeping. Use before writing or changing code that alters behaviour, when fixing a bug, or when judging whether a test can catch a regression.'
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/tdd.md` (global), then on `.claude/ordo/addons/tdd.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Test-driven development
 
 Adapted from mattpocock/skills (MIT, see LICENSE).

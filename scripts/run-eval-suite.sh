@@ -28,6 +28,7 @@ batches=(
   "reader-nowrite|reader-nowrite|--scaffold"
   "bash-skills|bash-skills|--scaffold --allow-tools Bash"
   "worth-it|worth-it|--scaffold --allow-tools Edit"
+  "dev-agent|dev-agent|--scaffold --allow-tools Bash --allow-tools Edit --allow-tools Write"
 )
 # evals-noagent/ is its own batch ("noagent"), run only through scripts/run-noagent-cases.sh.
 

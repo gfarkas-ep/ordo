@@ -3,6 +3,8 @@ name: eval-plan
 description: Plan a paid or long eval or benchmark run before it starts, and compare the result with the plan after it. Use before starting any eval, benchmark or test-suite run that costs money or takes long (for example `claude plugin eval`), and after it finishes to compare actual against plan.
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/eval-plan.md` (global), then on `.claude/ordo/addons/eval-plan.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Eval plan
 
 Works for any project and any paid or long eval or benchmark run. Worked example throughout: `claude plugin eval`. Paid runs spend the user's money and time, so the user sees the numbers first and says yes.

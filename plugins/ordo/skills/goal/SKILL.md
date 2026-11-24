@@ -3,6 +3,8 @@ name: goal
 description: 'Goal discipline for the architect. Load before any Tier 1 or higher work, when the SessionStart hook prints an "ordo: current goal" reminder, when the user states or changes a goal, asks for something off the current goal, or when a review loop, a plan that builds a safeguard, or a question for the user or a requirement to judge comes up. Tier 0 changes and plain questions need none of it, except the "Fixing a finding" rule, which applies at every tier.'
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/goal.md` (global), then on `.claude/ordo/addons/goal.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Goal
 
 Keeps work on one current goal. Rules are for Tier 1 and up; Tier 0 changes and plain questions are exempt from the goal rules below, except "Fixing a finding" and "Questions to the user", which have no exemption. A plain question only asks for information, an explanation or an opinion, and its answer changes no file, code, setting or live system; once the answer needs a change, it is not a plain question.

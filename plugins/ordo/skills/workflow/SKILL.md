@@ -3,6 +3,8 @@ name: workflow
 description: 'The architect workflow for the main session: tiers, which agent or skill to use, git rules. Load when the SessionStart hook prints "ordo: load the ordo:workflow skill", and before the first reply to any request that may change behaviour, code or live systems.'
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/workflow.md` (global), then on `.claude/ordo/addons/workflow.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Workflow
 
 Your next output is the tier line as plain reply text: one short line, at most 20 words, in the form `Tier 1: two files, no contract change`, with nothing added to it. Keep the test seams out of that line and propose them later in the reply: longer text before a tool call may reach the user only as a summary that drops the tier. Only after that line, in the same reply, load the first skill the work requires (ordo:diagnose first for a bug or failure; otherwise ordo:refine for ambiguous or user-facing Tier 1 and for Tier 2; ordo:tdd for other Tier 1). This names only the first skill to load: ordo:goal is still loaded for Tier 1 and 2, as stated below. When the tier requires ordo:refine, ask the user nothing before it runs.

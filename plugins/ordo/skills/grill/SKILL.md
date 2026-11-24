@@ -3,6 +3,8 @@ name: grill
 description: Interview the user relentlessly about a plan, decision or idea until every branch is settled.
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/grill.md` (global), then on `.claude/ordo/addons/grill.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Grill
 
 Adapted from mattpocock/skills `grilling` (MIT, see LICENSE).

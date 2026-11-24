@@ -3,6 +3,8 @@ name: diagnose
 description: Diagnosis loop for bugs, failures and performance regressions. Use when something is broken, throwing, failing, flaky or slow, including a failure you hit yourself mid-task (failed deploy, apply, CI run or command), or the user says "debug" or "diagnose", before reading code, logs or config to form a theory.
 ---
 
+Add-ons: when this skill loads, before anything else, use the Read tool (not Glob, which does not expand `~`) on `~/.claude/ordo/addons/diagnose.md` (global), then on `.claude/ordo/addons/diagnose.md` (project); a file that does not exist is skipped without comment. Their rules add to or replace this skill's rules, and the project file wins over the global one, except git permission, push, rebase, the guard hook, sending anything without the user's yes, and the yes before a paid eval, which no add-on changes.
+
 # Diagnose
 
 Adapted from mattpocock/skills `diagnosing-bugs` (MIT, see LICENSE). Run the phases in order. Skip one only with a stated reason.

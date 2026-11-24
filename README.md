@@ -1,6 +1,6 @@
 # ordo
 
-ordo makes Claude Code work to a discipline: process sized by tier (a typo fix gets none, a risky change gets a spec, a reviewed plan and a review), review rounds that are capped and then go to you, one goal at a time, and rules that are backed by evals. Six agents and eleven skills carry it out: the main session acts as the architect, who plans, sets test seams and delegates, and the role agents are the means.
+ordo makes Claude Code work to a discipline: process sized by tier (a typo fix gets none, a risky change gets a spec, a reviewed plan and a review), review rounds that are capped and then go to you, one goal at a time, and rules that are backed by evals. Seven agents and twelve skills carry it out: the main session acts as the architect, who plans, sets test seams and delegates, and the role agents are the means.
 
 | Name | Kind | Job |
 |---|---|---|
@@ -10,6 +10,7 @@ ordo makes Claude Code work to a discipline: process sized by tier (a typo fix g
 | `ordo:ba` | agent (Sonnet, read-only) | Writes the spec: user story, Given/When/Then criteria, edge cases, assumptions, open questions |
 | `ordo:po` | agent (Opus, read-only) | Consult-panel seat on value and scope; accepts finished work against the spec: ACCEPTED/REJECTED/ESCALATE |
 | `ordo:reader` | agent (Sonnet) | Reads a large set of files in full for the ba and writes verbatim extracts with `path:line`; fallback for large material only; the architect dispatches it only if the ba cannot |
+| `ordo:coach` | agent (Opus, read-only) | Called only by `ordo:improve`: screens one lesson (refused, already covered or accepted) and drafts candidate add-on files; it writes nothing |
 | `ordo:tdd` | skill | Test-first method: seams, red-green loop, test anti-patterns |
 | `ordo:diagnose` | skill | Bug, failure or slowdown: reproduce, find the seam, fix test-first |
 | `ordo:refine` | skill | Grill, then the ba question loop, until the spec has no open questions |
@@ -19,8 +20,9 @@ ordo makes Claude Code work to a discipline: process sized by tier (a typo fix g
 | `ordo:eval-plan` | skill | Plans and budgets a paid or long eval run before it starts, compares the result with the plan after |
 | `ordo:goal` | skill | Goal discipline for the architect: one current goal, side-request rule, capped review rounds, plain questions with one recommendation |
 | `ordo:workflow` | skill | The architect workflow (tiers, which agent or skill to use, git rules); the SessionStart hook line tells the main session to load it |
-| `ordo:retro` | skill | End-of-session improvement proposals, only when you invoke it; nothing is written without your approval; approved lessons go to the project's `LESSONS.md` (tag "ordo plugin" for plugin lessons) |
+| `ordo:retro` | skill | End-of-session improvement proposals, only when you invoke it; nothing is written without your approval; approved lessons go to the project's `LESSONS.md` (tag "ordo plugin" for plugin lessons); each saved lesson starts with the date it was saved |
 | `ordo:feedback` | skill | Drafts a feedback or issue report, prints it in full and sends it only after your explicit yes on that exact text; also shows or clears your usage log; only when you invoke it |
+| `ordo:improve` | skill | Turns one lesson into a checked eval case and a local add-on change to an ordo skill or agent, applied only after your pick; also shows the effective stack, the add-on history, restores an earlier version and offers a contributor PR; only when you invoke it |
 
 The tier workflow that ties them together is the `ordo:workflow` skill; the SessionStart hook tells the main session to load it.
 
@@ -162,7 +164,7 @@ Rules, in the `ordo:goal` skill and the reviewer agents (code-reviewer, qa, po):
 - Principle check: before briefing a fix for a finding, and before any question reaches you, the architect names the design principle it touches (cited) or states that no stated principle is touched. A fix that would break one is redesigned at the boundary; a question that touches one is put to you as the design question first.
 - Judging requirements: drop what you add that the goal does not need (the user's requests and reviewers' findings follow their own rules), raise a genuine issue first, even if nobody asked.
 - Questions to you are plain language with exactly one recommendation you can accept with "yes". Both formats count: the ba's `— Recommended:` and the goal skill's `Recommend:` line.
-- Retro: approved lessons go to the `LESSONS.md` of the project where the retro runs, replacing the 0.7.0 memory backlog entry. A lesson about the plugin is tagged "ordo plugin"; you carry it to the plugin repo by hand.
+- Retro: approved lessons go to the `LESSONS.md` of the project where the retro runs, replacing the 0.7.0 memory backlog entry. Each saved lesson starts with the date it was saved. A lesson about the plugin is tagged "ordo plugin"; you carry it to the plugin repo by hand, or turn it into an add-on with `/ordo:improve` (see Add-ons and the improve loop).
 - Hook: see Goal hook below.
 
 ## Reading settings
@@ -194,6 +196,48 @@ Known limits:
 
 - A foreground helper cannot be watched; only your Esc stops it.
 - A live run of a hung helper is not part of the plugin's tests.
+
+## Add-on settings
+
+| Key | Default | Covers |
+|---|---|---|
+| `addon_max_lines` | 40 | Most lines per add-on file |
+| `addon_scope` | global | `global`, `project` or `ask` (asked once per run): the folder every add-on change is written to |
+
+Set a value with one line per key, in the form `ordo <key>: <value>`, for example `ordo addon_scope: project`; `addon_max_lines` takes a positive integer. The project `CLAUDE.md` beats `~/.claude/CLAUDE.md`; a line with another value is ignored and the next level or the default applies.
+
+## Add-ons and the improve loop
+
+An add-on is a short markdown file of bullet rules, named after one ordo skill or agent (`tdd.md`, `dev.md`), that adds to or replaces that skill's or agent's own rules for you. The base skills and agents are never edited, so plugin updates keep arriving and your changes stay small and reversible. Every skill and agent except `ordo:improve` and `ordo:coach` reads its own add-on files when it starts (the two settings above set the size limit and where new add-ons go).
+
+Two places, one file per skill or agent in each:
+
+- `~/.claude/ordo/addons/<name>.md`: global, for all your projects;
+- `.claude/ordo/addons/<name>.md`: in the project.
+
+Layer order: base, then global, then project. On a conflict the later layer wins; the earlier rule stays in its file untouched. A project add-on comes with the repository, like a project `CLAUDE.md`: you trust it as you trust that file, so read it before you work in a repository you do not know.
+
+What no add-on can change, whatever it says: git permission, push, rebase, the guard hook, sending anything without your yes, and the yes before a paid eval.
+
+`/ordo:improve` starts only when you ask for it and handles one lesson per run:
+
+1. Lesson: you describe the behaviour to change, or pick one from a retro run in the conversation or a saved "ordo plugin" lesson in `LESSONS.md` (each shown with its date).
+2. Coach screen: `ordo:coach` refuses a lesson that targets one of the things above, or reports one the base text or an add-on already covers; nothing is written and no paid run starts.
+3. Your check of the case: the eval case is drafted, shown in full, and used only after your yes; after the yes it never changes.
+4. Eval plan and your yes: the run is planned with `ordo:eval-plan` (stages, number of candidates, regression cases, budget, stop rule); no paid eval starts before your explicit yes.
+5. Red check: the case must fail on the stack you have now; if it passes, it checks nothing and the run stops.
+6. Candidates: the coach drafts candidate add-on files (2 by default, at most 3, as set in the eval plan), each one change from the current add-on.
+7. Lesson round, 3/3: each candidate runs the case 3 times; a candidate below 3/3 is dropped.
+8. Regression: each 3/3 candidate runs earlier accepted cases and the plugin's cases for the same skill or agent.
+9. Your pick: a table shows each candidate with its results and diff; you pick one, reject all or drop the lesson. The add-on changes only after your pick.
+
+You may decline the eval and accept a candidate anyway; it is then written as "not verified" and shown that way in the history.
+
+Other things you can ask `/ordo:improve` for: the effective stack of a skill or agent (base, global and project rules in order, with the rules a later layer overrides marked); the history of an add-on (each saved version with its lesson and result); and a restore of a version you name (the file it replaces is saved to history first; restoring a "no previous add-on" entry removes the add-on, and you are warned before your yes). A run keeps its files next to your add-ons: lesson cases in `ordo/improve/evals/`, candidates in `ordo/improve/candidates/`, run results in `ordo/improve/runs/`, and add-on versions in `ordo/addons/history/`, under `~/.claude/` or the project's `.claude/`. After a verified change it offers a contributor PR (a draft, nothing sent without a further yes).
+
+`improve-eval.sh`, the helper that writes the add-on and history files and starts the eval runs, is not in the usage log's script list: its runs are not logged.
+
+Cost: paid eval runs happen only under an eval plan and after your yes. Declining the eval runs no paid eval; the coach still drafts candidates.
 
 ## Goal hook
 
@@ -256,7 +300,7 @@ Never logged: prompt text, agent output (apart from one verdict word), error tex
 
 Lines older than 90 days are removed the next time a line is written, and the summary ignores them. To read the log, open it with any editor or `cat`, or say `show my usage` (the `ordo:feedback` skill prints the summary). To clear it, ask the `ordo:feedback` skill in words (for example "clear my usage log"): it shows the path, the line count and the period, and deletes only that file after your yes. To turn logging off, set the line `ordo usage_log: off` in your project `CLAUDE.md` or in `~/.claude/CLAUDE.md` (the skill shows you the line; it edits no `CLAUDE.md`); the existing file stays until you clear it. The hooks make no network call and spawn no process; they fail open and print nothing.
 
-`/ordo:feedback` runs only when you start it (nothing in the plugin starts it for you). It asks three plain questions (what happened, what you expected, anything else), builds a report with the labels of the bug template, adds the list of all 13 switches and the 7 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on), adds a usage summary when `usage_log` is on (you can drop it), removes paths, e-mail addresses and the terms of `~/.config/ordo/private-terms.txt` (best effort), prints the full text and sends nothing until you answer yes to that exact text. A GitHub issue is public and permanent. After a yes it sends with `gh issue create` when `gh` is installed, otherwise it prints the text and the new-issue link for you to paste. The repository address is read from the `repository` field of `plugin.json` (`https://github.com/gfarkas-ep/ordo`); when that field is not set, nothing is sent and the text is only printed. "Show my usage" prints the summary and sends nothing.
+`/ordo:feedback` runs only when you start it (nothing in the plugin starts it for you). It asks three plain questions (what happened, what you expected, anything else), builds a report with the labels of the bug template, adds the list of all 13 switches and the 9 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on), adds a usage summary when `usage_log` is on (you can drop it), removes paths, e-mail addresses and the terms of `~/.config/ordo/private-terms.txt` (best effort), prints the full text and sends nothing until you answer yes to that exact text. A GitHub issue is public and permanent. After a yes it sends with `gh issue create` when `gh` is installed, otherwise it prints the text and the new-issue link for you to paste. The repository address is read from the `repository` field of `plugin.json` (`https://github.com/gfarkas-ep/ordo`); when that field is not set, nothing is sent and the text is only printed. "Show my usage" prints the summary and sends nothing.
 
 ## Notes
 

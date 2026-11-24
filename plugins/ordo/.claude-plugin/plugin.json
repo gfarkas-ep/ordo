@@ -1,7 +1,7 @@
 {
   "name": "ordo",
-  "version": "0.14.1",
-  "description": "Senior dev, senior QA, code reviewer, business analyst, product owner and reader agents plus tdd, diagnose, refine, consult-panel, decision, grill, eval-plan, workflow, goal and retro skills, a user-started feedback report, a Bash guard hook, a goal hook and an opt-in local usage log",
+  "version": "0.15.0",
+  "description": "Senior dev, senior QA, code reviewer, business analyst, product owner and reader agents plus tdd, diagnose, refine, consult-panel, decision, grill, eval-plan, workflow, goal and retro skills, the improve skill with its read-only coach agent, a user-started feedback report, a Bash guard hook, a goal hook and an opt-in local usage log",
   "license": "MIT",
   "repository": "https://github.com/gfarkas-ep/ordo",
   "author": {
