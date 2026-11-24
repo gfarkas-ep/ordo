@@ -912,7 +912,7 @@ rm -rf "$gl"
 
 # self-improve T5a: the improve skill, start, screen and case (AC14-AC18, AC20, AC22); pins sit before any fence, since sec_has ends a section at any "## " line
 imp=plugins/ordo/skills/improve/SKILL.md
-has "README documents add-ons and the improve loop (AC35)" '## Add-ons and the improve loop' "$readme"
+has "README documents add-ons and the self-improvement loop (AC35)" '## Add-ons and the self-improvement loop' "$readme"
 has "README names addon_max_lines (AC35)" '`addon_max_lines`' "$readme"
 has "README names addon_scope (AC35)" '`addon_scope`' "$readme"
 sec_has "improve Case: ask once per run (AC11)" "$imp" '## Case' 'ask the user once per run which folder'

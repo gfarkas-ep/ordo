@@ -164,7 +164,7 @@ Rules, in the `ordo:goal` skill and the reviewer agents (code-reviewer, qa, po):
 - Principle check: before briefing a fix for a finding, and before any question reaches you, the architect names the design principle it touches (cited) or states that no stated principle is touched. A fix that would break one is redesigned at the boundary; a question that touches one is put to you as the design question first.
 - Judging requirements: drop what you add that the goal does not need (the user's requests and reviewers' findings follow their own rules), raise a genuine issue first, even if nobody asked.
 - Questions to you are plain language with exactly one recommendation you can accept with "yes". Both formats count: the ba's `— Recommended:` and the goal skill's `Recommend:` line.
-- Retro: approved lessons go to the `LESSONS.md` of the project where the retro runs, replacing the 0.7.0 memory backlog entry. Each saved lesson starts with the date it was saved. A lesson about the plugin is tagged "ordo plugin"; you carry it to the plugin repo by hand, or turn it into an add-on with `/ordo:improve` (see Add-ons and the improve loop).
+- Retro: approved lessons go to the `LESSONS.md` of the project where the retro runs, replacing the 0.7.0 memory backlog entry. Each saved lesson starts with the date it was saved. A lesson about the plugin is tagged "ordo plugin"; you carry it to the plugin repo by hand, or turn it into an add-on with `/ordo:improve` (see Add-ons and the self-improvement loop).
 - Hook: see Goal hook below.
 
 ## Reading settings
@@ -206,7 +206,7 @@ Known limits:
 
 Set a value with one line per key, in the form `ordo <key>: <value>`, for example `ordo addon_scope: project`; `addon_max_lines` takes a positive integer. The project `CLAUDE.md` beats `~/.claude/CLAUDE.md`; a line with another value is ignored and the next level or the default applies.
 
-## Add-ons and the improve loop
+## Add-ons and the self-improvement loop
 
 An add-on is a short markdown file of bullet rules, named after one ordo skill or agent (`tdd.md`, `dev.md`), that adds to or replaces that skill's or agent's own rules for you. The base skills and agents are never edited, so plugin updates keep arriving and your changes stay small and reversible. Every skill and agent except `ordo:improve` and `ordo:coach` reads its own add-on files when it starts (the two settings above set the size limit and where new add-ons go).
 
