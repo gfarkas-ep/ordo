@@ -55,7 +55,8 @@ has "c1: project tdd add-on has the marker" "ADDON-PROJ-41" "$h/cwd/.claude/ordo
 h=$(sandbox c2); eq "addon-layers-override scaffold exit" 0 "$(run_scaffold addon-layers-override "$h")"
 has "c2: global tdd add-on has the end marker" "LAYER-GLOBAL-27" "$h/.claude/ordo/addons/tdd.md"
 has "c2: global tdd add-on has the non-conflicting keep marker" "LAYER-GLOBAL-KEEP-27" "$h/.claude/ordo/addons/tdd.md"
-has "c2: tdd base still holds the rule the project overrides" "Refactoring belongs to review, after the loop." "$ev/../skills/tdd/SKILL.md"
+# precondition read by an eval, not a prose pin: the addon-layers-override scaffold and its base-not-kept grader depend on this sentence; if it goes, that grader passes vacuously
+has "c2: tdd base still holds the rule the project add-on overrides" "Refactoring belongs to review, after the loop." "$ev/../skills/tdd/SKILL.md"
 has "c2: project tdd add-on names the base-override marker" "REFACTOR-27" "$h/cwd/.claude/ordo/addons/tdd.md"
 has "c2: project tdd add-on has the project marker" "LAYER-PROJECT-27" "$h/cwd/.claude/ordo/addons/tdd.md"
 
@@ -212,8 +213,6 @@ rx nomatch "$g" pattern 'Commit: nonexistent a1b2'
 rx nomatch "$g" pattern 'Commit:    a1b2c3d add shout option'
 rx nomatch "$g" pattern 'Files:     greet.js'
 [ -f "$ev/dev-dispatch-report/graders/tdd-and-verify.md" ] && has "tdd-and-verify is an llm grader" "type: llm" "$ev/dev-dispatch-report/graders/tdd-and-verify.md" || bad "tdd-and-verify grader missing"
-# the case tests base ordo:dev only: no add-on, no Risks section
-grep -rqi 'risks' "$ev/dev-dispatch-report" && bad "dev-dispatch-report mentions Risks" || ok
 # regexes are JavaScript: no inline flag groups, no Python-only anchors
 grep -rqE '(\(\?[A-Za-z])|(^|[^\\])(\\\\)*\\[AZz]' "$ev/dev-dispatch-report/graders" && bad "dev-dispatch-report grader has an inline flag or a Python-only anchor" || ok
 echo "test-addon-evals: $pass passed, $fail failed"

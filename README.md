@@ -239,6 +239,37 @@ Other things you can ask `/ordo:improve` for: the effective stack of a skill or 
 
 Cost: paid eval runs happen only under an eval plan and after your yes. Declining the eval runs no paid eval; the coach still drafts candidates.
 
+## Domain skills from other plugins or your project
+
+A domain skill is a skill about your own subject (payment rules, an API style, a test naming scheme), not about how ordo works. ordo's agents can use one on top of ordo. A domain skill can live in three places:
+
+- another plugin (named `plugin:skill`, for example `acme:pci-rules`);
+- the project, in `.claude/skills/<name>/SKILL.md`;
+- your user folder, in `~/.claude/skills/`.
+
+Two routes bring a skill to an agent:
+
+- The architect names it. Before it dispatches `ordo:dev`, `ordo:qa`, `ordo:code-reviewer`, `ordo:ba` or `ordo:po`, it checks the installed skills against the task. It puts each fitting skill in the brief as a `Domain skills:` line. When nothing fits, there is no line. Fix rounds and re-reviews repeat the line.
+- The agent picks it. When the brief names no skill and an installed skill fits the task, the agent loads it itself and marks it `(picked)` in its report. An ordo skill, or a generic tdd, review, planning or spec skill, is never picked this way.
+
+Every report of dev, qa, code-reviewer, ba and po has a `Domain skills:` line right after its Not verified part: the skills it loaded, `not loaded: <name>` for one that failed (the agent then carries on without it), or `none`. Later sections, such as one an add-on asks for, may follow it, and it is never folded into another section. The verdict or heading on the first line stays where it was.
+
+To make sure a skill is always considered, add one line to the project `CLAUDE.md` or to `~/.claude/CLAUDE.md`:
+
+| Key | Default | Covers |
+|---|---|---|
+| `domain_skills` | none | Skills the architect always considers, comma-separated |
+
+For example `ordo domain_skills: acme:pci-rules, error-messages`. The project line replaces the global line (no merge); a line with an empty list, an empty name or a name with a space is ignored. A listed skill is considered, not forced: it is named only when it fits the task, and one that is not installed is skipped with a one-line note, so a typo shows.
+
+Who wins: ordo's protected rules (git permission, push, rebase, the guard hook, sending anything only after your yes, the yes before a paid eval) and its process (tiers, review rounds, a read-only agent staying read-only, the fields of a report) come first. A domain skill may add its own lines at the end of a report, but never removes, renames or reorders an ordo field. Your add-ons come next. The domain skill wins on its own subject, such as code style or test naming.
+
+`ordo:reader` and `ordo:coach` do not use domain skills.
+
+Caution: project skills come with the repository, like a project `CLAUDE.md`, so read them before you work in a repository you do not know. The read-only agents can still run shell commands, so a hostile skill is a risk that only your reading of it guards against.
+
+Project skills are not eval-tested, because the eval sandbox does not load them; a manual live check covers them.
+
 ## Goal hook
 
 The plugin also registers a SessionStart hook (matcher `startup|resume|compact`, script `plugins/ordo/hooks/goal_context.py`, python3, standard library only, read-only). `usage_log.py` is also registered on SessionStart and writes only when `usage_log` is on. `goal_context.py` always prints one line telling the main session to load `ordo:workflow` before its next reply (the line comes first, whatever else happens). It then reads `ROADMAP.md` in the project directory (the hook's `cwd`, else the process cwd) and finds the first line that is exactly `## Current goal`. When that section has content, it prints `ordo: current goal (from ROADMAP.md). Load the ordo:goal skill before your next reply.` followed by the section (up to the next `## ` heading), capped at 15 lines and 1200 bytes; a cut ends with `…(truncated, see ROADMAP.md)`.
@@ -300,7 +331,7 @@ Never logged: prompt text, agent output (apart from one verdict word), error tex
 
 Lines older than 90 days are removed the next time a line is written, and the summary ignores them. To read the log, open it with any editor or `cat`, or say `show my usage` (the `ordo:feedback` skill prints the summary). To clear it, ask the `ordo:feedback` skill in words (for example "clear my usage log"): it shows the path, the line count and the period, and deletes only that file after your yes. To turn logging off, set the line `ordo usage_log: off` in your project `CLAUDE.md` or in `~/.claude/CLAUDE.md` (the skill shows you the line; it edits no `CLAUDE.md`); the existing file stays until you clear it. The hooks make no network call and spawn no process; they fail open and print nothing.
 
-`/ordo:feedback` runs only when you start it (nothing in the plugin starts it for you). It asks three plain questions (what happened, what you expected, anything else), builds a report with the labels of the bug template, adds the list of all 13 switches and the 9 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on), adds a usage summary when `usage_log` is on (you can drop it), removes paths, e-mail addresses and the terms of `~/.config/ordo/private-terms.txt` (best effort), prints the full text and sends nothing until you answer yes to that exact text. A GitHub issue is public and permanent. After a yes it sends with `gh issue create` when `gh` is installed, otherwise it prints the text and the new-issue link for you to paste. The repository address is read from the `repository` field of `plugin.json` (`https://github.com/gfarkas-ep/ordo`); when that field is not set, nothing is sent and the text is only printed. "Show my usage" prints the summary and sends nothing.
+`/ordo:feedback` runs only when you start it (nothing in the plugin starts it for you). It asks three plain questions (what happened, what you expected, anything else), builds a report with the labels of the bug template, adds the list of all 13 switches and the 10 value settings with their level (`project`, `global` or `default`; never a file path; whether or not `usage_log` is on), adds a usage summary when `usage_log` is on (you can drop it), removes paths, e-mail addresses and the terms of `~/.config/ordo/private-terms.txt` (best effort), prints the full text and sends nothing until you answer yes to that exact text. A GitHub issue is public and permanent. After a yes it sends with `gh issue create` when `gh` is installed, otherwise it prints the text and the new-issue link for you to paste. The repository address is read from the `repository` field of `plugin.json` (`https://github.com/gfarkas-ep/ordo`); when that field is not set, nothing is sent and the text is only printed. "Show my usage" prints the summary and sends nothing.
 
 ## Notes
 

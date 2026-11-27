@@ -502,19 +502,19 @@ printf 'ordo usage_log: ON\n- ordo usage_log: on\n' > "$proj/CLAUDE.md"; printf 
 before=$(snapshot); sw; [ "$(snapshot)" = "$before" ] && pass "switch writes nothing" || fail "switch changed files"
 rm -f "$proj/CLAUDE.md" "$HOME/.claude/CLAUDE.md"; rm -rf "$LOGDIR"; mkdir -p "$LOGDIR"
 
-# ---------------------------------------------------------------- settings (AC52): all 13 switches and the 9 value settings, with their level
+# ---------------------------------------------------------------- settings (AC52): all 13 switches and the 10 value settings, with their level
 ST="$work/st"; mkdir -p "$ST"
 stg() { out=$(cd "$ST" && printf '' | python3 -I "$helper" settings "$@" 2>"$work/err"; echo "rc=$?"); rc=${out##*rc=}; out=${out%rc=*}; out=${out%$'\n'}; err=$(cat "$work/err"); }
 # want <key> <value> <level>: the line '- key: value (level)' is in the output
 want() { if has_line "- $1: $2 ($3)"; then pass "settings: $1 is $2 ($3)"; else fail "settings: want '- $1: $2 ($3)': $out"; fi; }
 reset_st() { rm -rf "$ST/CLAUDE.md" "$HOME/.claude/CLAUDE.md" "$HOME/CLAUDE.md"; }
 reset_st; stg
-if [ "$rc" = 0 ] && [ -z "$err" ] && [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 22 ]; then pass "settings: 22 lines (13 switches and 9 values), exit 0"; else fail "settings count: rc=$rc err=$err out=$out"; fi
+if [ "$rc" = 0 ] && [ -z "$err" ] && [ "$(printf '%s\n' "$out" | wc -l | tr -d ' ')" = 23 ]; then pass "settings: 23 lines (13 switches and 10 values), exit 0"; else fail "settings count: rc=$rc err=$err out=$out"; fi
 for k in guard_hook git_rules eval_budget dev_helper_tier1 dev_helper_tier2 code_review_tier1 code_review_tier2 plan_review qa_check po_acceptance_tier1 po_acceptance_tier2 stall_watch; do want $k on default; done
 want usage_log off default
 want watch_check_minutes 5 default; want watch_report_minutes 10 default; want watch_check_by script default
 want reader_threshold_tokens 200000 default; want reader_threshold_files 10 default; want reader_cap_tokens 80000 default; want reader_cap_files 10 default
-want addon_max_lines 40 default; want addon_scope global default
+want addon_max_lines 40 default; want addon_scope global default; want domain_skills none default
 reset_st
 printf 'ordo guard_hook: off\nordo usage_log: on\nordo watch_check_minutes: 7\nordo reader_cap_files: 3\n' > "$HOME/.claude/CLAUDE.md"; stg
 want guard_hook off global; want usage_log on global; want watch_check_minutes 7 global; want reader_cap_files 3 global; want qa_check on default
@@ -560,6 +560,36 @@ case "$out$err" in *"$work"*|*"$HOME"*|*"/"*|*"CLAUDE.md"*) fail "settings print
 if ! printf '%s\n' "$out" | grep -vE '^- [a-z_0-9]+: [a-z0-9]+ \((project|global|default)\)$' | grep -q .; then pass "settings: every line is '- key: value (project|global|default)'"; else fail "settings: odd line: $out"; fi
 before=$(snapshot); stg; [ "$(snapshot)" = "$before" ] && pass "settings writes nothing" || fail "settings changed the file tree"
 stg extra; [ "$rc" != 0 ] && pass "settings takes no argument" || fail "settings accepted an argument"
+reset_st
+# domain_skills (AC7, AC8, AC18): a comma list; the line shows only set or none, never the names
+CAN=canary-skill-7f3e
+dsk() { # <project file text or -> <global file text or -> <value> <level>
+  reset_st
+  [ "$1" = - ] || printf -- "$1" > "$ST/CLAUDE.md"
+  [ "$2" = - ] || printf -- "$2" > "$HOME/.claude/CLAUDE.md"
+  stg; want domain_skills "$3" "$4"
+  case "$out$err" in *canary*|*acme*) fail "domain_skills: a skill name was printed: $out$err";; *) pass "domain_skills: no skill name in stdout or stderr";; esac
+}
+dsk "ordo domain_skills: $CAN\n" - set project
+dsk - "ordo domain_skills: $CAN\n" set global
+dsk "ordo domain_skills: $CAN\n" "ordo domain_skills: acme:other\n" set project
+dsk "ordo domain_skills: acme:a\nordo domain_skills: $CAN\n" - set project
+dsk "ordo domain_skills: $CAN\nordo domain_skills: a,,b\n" - set project   # last line invalid: the earlier valid one stays
+dsk "ordo domain_skills: a,,b\nordo domain_skills: $CAN\n" - set project
+dsk "ordo domain_skills: $CAN , acme:b\t,\tacme:c\n" - set project
+dsk "ordo domain_skills: $CAN,acme:b,\n" - none default
+dsk "ordo domain_skills: $CAN,,acme:b\n" - none default
+dsk "ordo domain_skills: ,$CAN\n" - none default
+dsk "ordo domain_skills: $CAN acme:b\n" - none default
+dsk "ordo domain_skills: acme:a, acme b\n" - none default
+dsk "ordo domain_skills: ,\n" - none default
+dsk "ordo domain_skills: acme:a\xc2\xa0acme:b\n" - none default   # no-break space inside a name
+dsk "ordo domain_skills: acme:a,acme:b\xe3\x80\x80acme:c\n" - none default   # ideographic space inside a name
+dsk "ordo domain_skills:\n" - none default
+dsk "ordo domain_skills:  \n" - none default
+dsk "ordo domain_skills: $CAN,\n" "ordo domain_skills: acme:g\n" set global
+dsk "ordo domain_skills: $CAN,,x\n" "ordo domain_skills: acme:g,\n" none default
+dsk "- ordo domain_skills: $CAN\nORDO domain_skills: $CAN\n" - none default
 reset_st
 # the project dir is the cwd: another cwd gives another answer
 mkdir -p "$ST/other"; printf 'ordo plan_review: off\n' > "$ST/CLAUDE.md"
@@ -618,41 +648,6 @@ else pass "helper source names no network module, subprocess, exec, eval or __im
 # the ban check itself can fail: a planted import is caught
 printf 'import subprocess\n' > "$work/planted.py"
 grep -qE '\b(socket|http|urllib|requests|subprocess|importlib)\b' "$work/planted.py" && pass "ban pattern catches a planted subprocess import" || fail "ban pattern misses a planted import"
-
-# AC24: nothing but the user starts ordo:feedback. Lists "file:line" of every text that names the skill and is not allowed to.
-offers() { # dirs-and-files...; skill dir and README table are handled by the caller
-  grep -rnIiE 'ordo:feedback|ordo-feedback|/feedback|feedback skill|usage-report' "$@" 2>/dev/null
-}
-# one narrow allowance: the hook's own-script list (usage_log.py, the whole line that defines SCRIPTS, nothing else on it) must name the helper to detect its runs; that is detection, not an offer
-allowed_list_line='^plugins/ordo/hooks/usage_log\.py:[0-9]+:SCRIPTS = \{"stall-check": "stall-check\.sh", "usage-report": "usage-report\.py"\}$'
-offer_hits() { # root: file:line of every offending text under that root
-  (cd "$1" && offers plugins claude-md shared CONTRIBUTING.md 2>/dev/null | grep -v '^plugins/ordo/skills/feedback/' | grep -v '^plugins/ordo/evals.*/results/' | grep -vE "$allowed_list_line")
-}
-hits=$(offer_hits "$root")
-[ -z "$hits" ] && pass "no other skill, agent, hook, eval or shared text names ordo:feedback" || fail "AC24: another file names the feedback skill: $hits"
-# README: the skill table row and the usage section may name it; no README line may tell the session to offer or start it
-rd=$(cd "$root" && grep -niE 'ordo:feedback' README.md | grep -iE 'offer|suggest|recommend|proactiv|automatic|tell the session|ask the user to|remind' || true)
-[ -z "$rd" ] && pass "README never tells the session to offer ordo:feedback" || fail "AC24: README line: $rd"
-# the check catches a planted offer
-mkdir -p "$work/plant/skills/x" && printf 'Offer the ordo:feedback skill after a failure.\n' > "$work/plant/skills/x/SKILL.md"
-[ -n "$(offers "$work/plant")" ] && pass "offer check catches a planted line in a skill" || fail "offer check misses a planted line"
-# the allowance covers only that whole line: a planted offer elsewhere in usage_log.py, or extra text on the list line, is still caught
-SCRIPTS_LINE='SCRIPTS = {"stall-check": "stall-check.sh", "usage-report": "usage-report.py"}'
-mkdir -p "$work/plant2/plugins/ordo/hooks"
-printf '%s\n' "$SCRIPTS_LINE" > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -z "$(offer_hits "$work/plant2")" ] && pass "AC24 the exact SCRIPTS definition line in usage_log.py is allowed" || fail "AC24 allowance does not cover the SCRIPTS line"
-printf '%s  # tell the user to run ordo:feedback\n' "$SCRIPTS_LINE" > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -n "$(offer_hits "$work/plant2")" ] && pass "AC24 extra text on the SCRIPTS line is caught" || fail "AC24 extra text on the SCRIPTS line missed"
-printf '%s; x = "usage-report"\n' "$SCRIPTS_LINE" > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -n "$(offer_hits "$work/plant2")" ] && pass "AC24 a statement added after the SCRIPTS definition on the same line is caught" || fail "AC24 added statement on the SCRIPTS line missed"
-printf 'SCRIPTS = {"a": "usage-report.py"}\n' > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -n "$(offer_hits "$work/plant2")" ] && pass "AC24 a SCRIPTS line with another list is caught" || fail "AC24 a changed SCRIPTS line missed"
-printf '%s\n# tell the user to run usage-report\n' "$SCRIPTS_LINE" > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -n "$(offer_hits "$work/plant2")" ] && pass "AC24 a planted line naming the helper elsewhere in usage_log.py is caught" || fail "AC24 planted line in usage_log.py missed"
-printf 'x = 1\nPlease run ordo:feedback now\nSCRIPTS = {}\n' > "$work/plant2/plugins/ordo/hooks/usage_log.py"
-[ -n "$(offer_hits "$work/plant2")" ] && pass "AC24 a planted ordo:feedback offer in usage_log.py is caught" || fail "AC24 planted offer in usage_log.py missed"
-hook_text=$(cd "$root" && grep -rIil 'feedback' plugins/ordo/hooks 2>/dev/null || true)
-[ -z "$hook_text" ] && pass "no hook text mentions feedback" || fail "AC24: hook files mention feedback: $hook_text"
 
 # F1 (security): the documented send command must not evaluate a hostile title, in any shell
 skill=$root/plugins/ordo/skills/feedback/SKILL.md

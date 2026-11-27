@@ -1,0 +1,5 @@
+{
+  "name": "acme",
+  "version": "0.0.1",
+  "description": "Test-only plugin for the domain-skill-plugin eval case: one domain skill."
+}

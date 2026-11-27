@@ -5,7 +5,7 @@
   summary [--days N]   counts from ~/.config/ordo/usage.jsonl for the last N days (default 30, at most 90): per own skill, agent and
                        script the runs, failed, aborted, asked, ran, not allowed, denied (auto mode) and cancelled numbers (agents also started,
                        never finished; a script also started through Monitor, when it was), verdict and guard counts, agent run time and session length
-  settings             one line per switch (13) and per value setting (9): value and level (project, global or default),
+  settings             one line per switch (13) and per value setting (10): value and level (project, global or default),
                        read from ./CLAUDE.md and ~/.claude/CLAUDE.md with the rules of the hooks; never a file path
   redact               stdin to stdout: paths, e-mail addresses and private terms replaced by [removed]; when the
                        private-terms list (~/.config/ordo/private-terms.txt) cannot be used, the first output line is
@@ -393,12 +393,14 @@ def usage_switch():
     return "usage_log: off"
 
 
-# the settings that hold a value: key -> (accepted form, default); the number keys take a positive integer
+# the settings that hold a value: key -> (accepted form, default); the number keys take a positive integer; the list key
+# takes comma-separated names and shows only `set` (the names are never printed: a feedback report can become a public issue)
 VALUE_SETTINGS = (("watch_check_minutes", "number", "5"), ("watch_report_minutes", "number", "10"),
                   ("watch_check_by", "script|model", "script"), ("reader_threshold_tokens", "number", "200000"),
                   ("reader_threshold_files", "number", "10"), ("reader_cap_tokens", "number", "80000"),
                   ("reader_cap_files", "number", "10"), ("addon_max_lines", "number", "40"),
-                  ("addon_scope", "global|project|ask", "global"))
+                  ("addon_scope", "global|project|ask", "global"),
+                  ("domain_skills", "list", "none"))
 
 
 def setting_value(path, key, form, max_bytes):
@@ -420,6 +422,11 @@ def setting_value(path, key, form, max_bytes):
         return None
     value = None
     for line in text.split("\n"):
+        if form == "list":
+            m = re.fullmatch(r"ordo %s:\s+(.*)" % re.escape(key), line.strip())
+            if m and all(re.fullmatch(r"[^\s,]+", n.strip()) for n in m.group(1).split(",")):
+                value = "set"  # a name with any white space, an empty name or an empty list makes the line invalid
+            continue
         m = re.fullmatch(r"ordo %s: (\S+)" % re.escape(key), line.strip())
         if not m:
             continue
